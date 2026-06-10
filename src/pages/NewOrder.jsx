@@ -134,7 +134,7 @@ export default function NewOrder() {
             <Field k="clientFirstName" label="Prénom" />
             <Field k="clientLastName" label="Nom" />
             <Field k="clientInstagram" label="Instagram" required placeholder="@pseudo" />
-            <Field k="clientPhone" label="Téléphone" required type="tel" />
+            <Field k="clientPhone" label="Téléphone" type="tel" />
             <Field k="clientEmail" label="Email" type="email" className="sm:col-span-2" />
           </div>
         </Card>
