@@ -131,7 +131,7 @@ export default function NewOrder() {
         <Card>
           <h2 className="font-playfair font-semibold text-chocolat text-lg mb-4">Informations cliente</h2>
           <div className="grid sm:grid-cols-2 gap-3">
-            <Field k="clientFirstName" label="Prénom" required />
+            <Field k="clientFirstName" label="Prénom" />
             <Field k="clientLastName" label="Nom" />
             <Field k="clientInstagram" label="Instagram" required placeholder="@pseudo" />
             <Field k="clientPhone" label="Téléphone" required type="tel" />
