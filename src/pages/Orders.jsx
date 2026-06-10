@@ -85,14 +85,23 @@ export default function Orders() {
             <button
               onClick={() => setView('table')}
               className={`px-3 py-2 flex items-center gap-1 text-sm transition-colors ${view === 'table' ? 'bg-rose-100 text-bordeaux font-semibold' : 'text-warmgray-400 hover:bg-rose-50'}`}
+              title="Vue tableau"
             >
               <List size={15} />
             </button>
             <button
               onClick={() => setView('cards')}
               className={`px-3 py-2 flex items-center gap-1 text-sm transition-colors ${view === 'cards' ? 'bg-rose-100 text-bordeaux font-semibold' : 'text-warmgray-400 hover:bg-rose-50'}`}
+              title="Vue cartes"
             >
               <LayoutGrid size={15} />
+            </button>
+            <button
+              onClick={() => setView('calendar')}
+              className={`px-3 py-2 flex items-center gap-1 text-sm transition-colors ${view === 'calendar' ? 'bg-rose-100 text-bordeaux font-semibold' : 'text-warmgray-400 hover:bg-rose-50'}`}
+              title="Vue calendrier"
+            >
+              <CalendarDays size={15} />
             </button>
           </div>
         </div>
