@@ -134,7 +134,9 @@ export default function Orders() {
         <p className="text-xs text-warmgray-400 mb-3">{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</p>
       )}
 
-      {filtered.length === 0 ? (
+      {view === 'calendar' ? (
+        <CalendarView orders={filtered} />
+      ) : filtered.length === 0 ? (
         <EmptyState title="Aucune commande trouvée" sub="Modifiez vos filtres ou créez une nouvelle commande." />
       ) : view === 'table' ? (
         <TableView orders={filtered} updateOrder={updateOrder} />
