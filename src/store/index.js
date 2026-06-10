@@ -130,6 +130,19 @@ const useStore = create(
         set(s => ({ catalog: { ...s.catalog, supplements: s.catalog.supplements.filter(x => x.id !== id) } }))
       },
 
+      // ── Shopping (Courses) ────────────────────────────────
+      shoppingChecked: {},
+
+      toggleShoppingItem(key) {
+        set(s => ({
+          shoppingChecked: { ...s.shoppingChecked, [key]: !s.shoppingChecked[key] },
+        }))
+      },
+
+      clearShoppingChecked() {
+        set({ shoppingChecked: {} })
+      },
+
       // ── Settings ──────────────────────────────────────────
       settings: {
         businessName: 'Mycookycake',
