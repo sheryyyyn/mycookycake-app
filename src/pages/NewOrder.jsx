@@ -60,9 +60,7 @@ export default function NewOrder() {
 
   function validate() {
     const errs = {}
-    if (!form.clientFirstName) errs.clientFirstName = 'Requis'
     if (!form.clientInstagram) errs.clientInstagram = 'Requis'
-    if (!form.clientPhone) errs.clientPhone = 'Requis'
     if (!form.deliveryDate) errs.deliveryDate = 'Requis'
     if (!form.deliveryTime) errs.deliveryTime = 'Requis'
     setErrors(errs)
