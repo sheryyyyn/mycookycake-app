@@ -269,6 +269,9 @@ function CalendarView({ orders }) {
           const dayOrders = ordersByDate[key] || []
           const isCurrentMonth = isSameMonth(day, currentMonth)
           const isToday_ = isToday(day)
+          const isExpanded = expandedDays[key] || false
+          const visibleOrders = isExpanded ? dayOrders : dayOrders.slice(0, 4)
+          const hiddenCount = dayOrders.length - 4
 
           return (
             <div
@@ -281,7 +284,7 @@ function CalendarView({ orders }) {
                 {format(day, 'd')}
               </div>
               <div className="space-y-1">
-                {dayOrders.slice(0, 4).map(o => {
+                {visibleOrders.map(o => {
                   const hasTime = Boolean(o.deliveryTime && o.deliveryTime.trim())
                   const flavors = [o.flavorMain, o.flavorSecondary].filter(Boolean).join(' + ')
                   const details = [o.productVariant, o.shape, flavors].filter(Boolean).join(' · ')
@@ -309,8 +312,21 @@ function CalendarView({ orders }) {
                     </button>
                   )
                 })}
-                {dayOrders.length > 4 && (
-                  <p className="text-[10px] text-warmgray-400 pl-1">+{dayOrders.length - 4} de plus</p>
+                {!isExpanded && hiddenCount > 0 && (
+                  <button
+                    onClick={() => setExpandedDays(prev => ({ ...prev, [key]: true }))}
+                    className="text-[10px] text-bordeaux font-medium pl-1 hover:underline"
+                  >
+                    +{hiddenCount} de plus
+                  </button>
+                )}
+                {isExpanded && dayOrders.length > 4 && (
+                  <button
+                    onClick={() => setExpandedDays(prev => ({ ...prev, [key]: false }))}
+                    className="text-[10px] text-warmgray-400 font-medium pl-1 hover:underline"
+                  >
+                    Réduire
+                  </button>
                 )}
               </div>
             </div>
