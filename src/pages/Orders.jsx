@@ -272,29 +272,44 @@ function CalendarView({ orders }) {
           return (
             <div
               key={key}
-              className={`min-h-[90px] p-1.5 border-b border-r border-rose-50 ${!isCurrentMonth ? 'bg-rose-50/20' : ''} ${i % 7 === 6 ? 'border-r-0' : ''}`}
+              className={`min-h-[110px] p-1.5 border-b border-r border-rose-50 ${!isCurrentMonth ? 'bg-rose-50/20' : ''} ${i % 7 === 6 ? 'border-r-0' : ''}`}
             >
               <div className={`text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full mb-1 ${
                 isToday_ ? 'bg-bordeaux text-white' : isCurrentMonth ? 'text-chocolat' : 'text-warmgray-300'
               }`}>
                 {format(day, 'd')}
               </div>
-              <div className="space-y-0.5">
-                {dayOrders.slice(0, 3).map(o => {
-                  const cfg = STATUS_CONFIG[o.status] ?? {}
+              <div className="space-y-1">
+                {dayOrders.slice(0, 4).map(o => {
+                  const hasTime = Boolean(o.deliveryTime && o.deliveryTime.trim())
+                  const flavors = [o.flavorMain, o.flavorSecondary].filter(Boolean).join(' + ')
+                  const details = [o.productVariant, o.shape, flavors].filter(Boolean).join(' · ')
                   return (
                     <button
                       key={o.id}
                       onClick={() => navigate(`/commandes/${o.id}`)}
-                      className={`w-full text-left text-[10px] leading-tight px-1.5 py-0.5 rounded-md border truncate font-medium ${cfg.color ?? 'bg-gray-100 text-gray-600 border-gray-200'} hover:opacity-80 transition-opacity`}
-                      title={`${o.clientFirstName} ${o.clientLastName} — ${getProductLabel(o.productType)}`}
+                      className={`w-full text-left rounded-lg border px-1.5 py-1 transition-opacity hover:opacity-80 ${
+                        hasTime
+                          ? 'bg-green-50 border-green-200 text-green-800'
+                          : 'bg-gray-100 border-gray-200 text-gray-500'
+                      }`}
                     >
-                      {o.clientFirstName} · {getProductLabel(o.productType)}
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-[10px] font-semibold truncate leading-tight">
+                          {o.clientInstagram || `${o.clientFirstName} ${o.clientLastName}`}
+                        </span>
+                        {hasTime && (
+                          <span className="text-[9px] font-medium shrink-0 opacity-80">{o.deliveryTime}</span>
+                        )}
+                      </div>
+                      {details && (
+                        <p className="text-[9px] leading-tight opacity-70 truncate mt-0.5">{details}</p>
+                      )}
                     </button>
                   )
                 })}
-                {dayOrders.length > 3 && (
-                  <p className="text-[10px] text-warmgray-400 pl-1">+{dayOrders.length - 3} de plus</p>
+                {dayOrders.length > 4 && (
+                  <p className="text-[10px] text-warmgray-400 pl-1">+{dayOrders.length - 4} de plus</p>
                 )}
               </div>
             </div>
@@ -302,13 +317,16 @@ function CalendarView({ orders }) {
         })}
       </div>
 
-      {/* Légende statuts */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 px-5 py-3 border-t border-rose-100">
-        {Object.entries(STATUS_CONFIG).map(([key, { label, color }]) => (
-          <span key={key} className={`text-[11px] px-2 py-0.5 rounded-full border font-medium ${color}`}>
-            {label}
-          </span>
-        ))}
+      {/* Légende */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-1 px-5 py-3 border-t border-rose-100">
+        <span className="flex items-center gap-1.5 text-[11px] text-green-700 font-medium">
+          <span className="w-2.5 h-2.5 rounded-sm bg-green-100 border border-green-300 inline-block" />
+          Heure de retrait renseignée
+        </span>
+        <span className="flex items-center gap-1.5 text-[11px] text-gray-500 font-medium">
+          <span className="w-2.5 h-2.5 rounded-sm bg-gray-100 border border-gray-300 inline-block" />
+          Heure non renseignée
+        </span>
       </div>
     </div>
   )
