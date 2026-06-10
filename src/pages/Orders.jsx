@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Plus, LayoutGrid, List, ChevronRight, Eye } from 'lucide-react'
+import { Search, Plus, LayoutGrid, List, Eye, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths, isSameMonth, isSameDay, isToday, parseISO } from 'date-fns'
+import { fr } from 'date-fns/locale'
 import useStore from '../store'
 import {
   formatDate, formatAmount, getProductLabel, getStatusLabel, STATUS_CONFIG,
