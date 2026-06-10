@@ -202,6 +202,118 @@ function TableView({ orders, updateOrder }) {
   )
 }
 
+function CalendarView({ orders }) {
+  const navigate = useNavigate()
+  const [currentMonth, setCurrentMonth] = useState(new Date())
+
+  const monthStart = startOfMonth(currentMonth)
+  const monthEnd = endOfMonth(currentMonth)
+  const calStart = startOfWeek(monthStart, { weekStartsOn: 1 })
+  const calEnd = endOfWeek(monthEnd, { weekStartsOn: 1 })
+
+  const days = []
+  let d = calStart
+  while (d <= calEnd) {
+    days.push(d)
+    d = addDays(d, 1)
+  }
+
+  const ordersByDate = useMemo(() => {
+    const map = {}
+    orders.forEach(o => {
+      if (!o.deliveryDate) return
+      const key = o.deliveryDate.slice(0, 10)
+      if (!map[key]) map[key] = []
+      map[key].push(o)
+    })
+    return map
+  }, [orders])
+
+  const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+
+  return (
+    <div className="card p-0 overflow-hidden">
+      {/* Nav mois */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-rose-100">
+        <button
+          onClick={() => setCurrentMonth(m => subMonths(m, 1))}
+          className="p-1.5 rounded-lg text-warmgray-400 hover:text-bordeaux hover:bg-rose-50 transition-colors"
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <h2 className="font-playfair text-lg font-semibold text-chocolat capitalize">
+          {format(currentMonth, 'MMMM yyyy', { locale: fr })}
+        </h2>
+        <button
+          onClick={() => setCurrentMonth(m => addMonths(m, 1))}
+          className="p-1.5 rounded-lg text-warmgray-400 hover:text-bordeaux hover:bg-rose-50 transition-colors"
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
+
+      {/* En-têtes jours */}
+      <div className="grid grid-cols-7 border-b border-rose-100">
+        {weekDays.map(wd => (
+          <div key={wd} className="text-center text-xs font-semibold text-warmgray-400 uppercase tracking-wide py-2">
+            {wd}
+          </div>
+        ))}
+      </div>
+
+      {/* Grille */}
+      <div className="grid grid-cols-7">
+        {days.map((day, i) => {
+          const key = format(day, 'yyyy-MM-dd')
+          const dayOrders = ordersByDate[key] || []
+          const isCurrentMonth = isSameMonth(day, currentMonth)
+          const isToday_ = isToday(day)
+
+          return (
+            <div
+              key={key}
+              className={`min-h-[90px] p-1.5 border-b border-r border-rose-50 ${!isCurrentMonth ? 'bg-rose-50/20' : ''} ${i % 7 === 6 ? 'border-r-0' : ''}`}
+            >
+              <div className={`text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full mb-1 ${
+                isToday_ ? 'bg-bordeaux text-white' : isCurrentMonth ? 'text-chocolat' : 'text-warmgray-300'
+              }`}>
+                {format(day, 'd')}
+              </div>
+              <div className="space-y-0.5">
+                {dayOrders.slice(0, 3).map(o => {
+                  const cfg = STATUS_CONFIG[o.status] ?? {}
+                  return (
+                    <button
+                      key={o.id}
+                      onClick={() => navigate(`/commandes/${o.id}`)}
+                      className={`w-full text-left text-[10px] leading-tight px-1.5 py-0.5 rounded-md border truncate font-medium ${cfg.color ?? 'bg-gray-100 text-gray-600 border-gray-200'} hover:opacity-80 transition-opacity`}
+                      title={`${o.clientFirstName} ${o.clientLastName} — ${getProductLabel(o.productType)}`}
+                    >
+                      {o.clientFirstName} · {getProductLabel(o.productType)}
+                    </button>
+                  )
+                })}
+                {dayOrders.length > 3 && (
+                  <p className="text-[10px] text-warmgray-400 pl-1">+{dayOrders.length - 3} de plus</p>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Légende statuts */}
+      <div className="flex flex-wrap gap-x-4 gap-y-1 px-5 py-3 border-t border-rose-100">
+        {Object.entries(STATUS_CONFIG).map(([key, { label, color }]) => (
+          <span key={key} className={`text-[11px] px-2 py-0.5 rounded-full border font-medium ${color}`}>
+            {label}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function CardsView({ orders, updateOrder }) {
   const navigate = useNavigate()
   return (
