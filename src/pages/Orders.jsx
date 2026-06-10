@@ -205,6 +205,7 @@ function TableView({ orders, updateOrder }) {
 function CalendarView({ orders }) {
   const navigate = useNavigate()
   const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [expandedDays, setExpandedDays] = useState({})
 
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(currentMonth)
