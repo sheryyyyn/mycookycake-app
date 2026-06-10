@@ -117,6 +117,107 @@ export function getTomorrowOrders(orders) {
   })
 }
 
+export function getWeekOrders(orders) {
+  const now = new Date()
+  const weekStart = startOfWeek(now, { weekStartsOn: 1 })
+  const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
+  return orders.filter(o => {
+    if (!o.deliveryDate) return false
+    if (o.status === 'annulee') return false
+    const d = parseISO(o.deliveryDate)
+    return d >= weekStart && d <= weekEnd
+  }).sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate))
+}
+
+// Returns genoise slices needed per order (0 if not applicable)
+export function getGenoiseCount(order) {
+  if (order.productType === 'bento_cake') return 2
+  if (order.productType === 'layer_cake') {
+    const v = order.productVariant || ''
+    if (v.includes('10')) return 3
+    if (v.includes('15')) return 4
+    if (v.includes('20') || v.includes('25')) return 5
+    if (v.includes('30') || v.includes('35')) return 5
+  }
+  return 0
+}
+
+// Aggregate production summary for a list of orders
+export function aggregateProduction(orders) {
+  const bentoByVariantShape = {} // "4 parts|coeur" → count
+  const layerByVariantShape = {}
+  let cupcakesQty = 0
+  let layerCupQty = 0
+
+  for (const o of orders) {
+    if (o.productType === 'bento_cake') {
+      const key = `${o.productVariant || '?'}|${o.shape || 'rond'}`
+      bentoByVariantShape[key] = (bentoByVariantShape[key] || 0) + 1
+    } else if (o.productType === 'layer_cake') {
+      const key = `${o.productVariant || '?'}|${o.shape || 'rond'}`
+      layerByVariantShape[key] = (layerByVariantShape[key] || 0) + 1
+    } else if (o.productType === 'cupcakes') {
+      cupcakesQty += Number(o.quantity) || 0
+    } else if (o.productType === 'layer_cup') {
+      layerCupQty += Number(o.quantity) || 1
+    }
+  }
+
+  return { bentoByVariantShape, layerByVariantShape, cupcakesQty, layerCupQty }
+}
+
+// Aggregate genoise counts for a list of orders
+export function aggregateGenoises(orders) {
+  let bento = 0, layer10 = 0, layer15 = 0, layer2025 = 0, layer3035 = 0
+  for (const o of orders) {
+    if (o.productType === 'bento_cake') {
+      bento += 2
+    } else if (o.productType === 'layer_cake') {
+      const v = o.productVariant || ''
+      if (v.includes('10')) layer10 += 3
+      else if (v.includes('15')) layer15 += 4
+      else if (v.includes('20') || v.includes('25')) layer2025 += 5
+      else if (v.includes('30') || v.includes('35')) layer3035 += 5
+    }
+  }
+  const total = bento + layer10 + layer15 + layer2025 + layer3035
+  return { bento, layer10, layer15, layer2025, layer3035, total }
+}
+
+// Aggregate flavors from orders
+export function aggregateFlavors(orders) {
+  const counts = {}
+  for (const o of orders) {
+    const f = o.flavorMain?.trim()
+    if (f) counts[f] = (counts[f] || 0) + 1
+    const f2 = o.flavorSecondary?.trim()
+    if (f2) counts[f2] = (counts[f2] || 0) + 1
+  }
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])
+}
+
+// Aggregate supplements from orders
+export function aggregateSupplements(orders) {
+  const counts = {}
+  for (const o of orders) {
+    for (const s of o.supplements || []) {
+      counts[s] = (counts[s] || 0) + 1
+    }
+  }
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])
+}
+
+// Orders due today, sorted by time
+export function getTodayPickups(orders) {
+  return orders
+    .filter(o => {
+      if (!o.deliveryDate) return false
+      if (o.status === 'annulee') return false
+      return isToday(parseISO(o.deliveryDate))
+    })
+    .sort((a, b) => (a.deliveryTime || '').localeCompare(b.deliveryTime || ''))
+}
+
 export function getLateOrders(orders) {
   const now = startOfDay(new Date())
   return orders.filter(o => {
