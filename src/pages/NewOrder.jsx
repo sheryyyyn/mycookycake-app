@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { ChevronLeft, Plus, X } from 'lucide-react'
 import useStore from '../store'
 import { genId, computePaymentStatus, getProductLabel } from '../utils'
-import { Input, Select, Textarea, Card } from '../components/ui'
+import { Input, Select, Textarea, Card, PhotoGallery } from '../components/ui'
 
 const SHAPES = ['rond', 'coeur', 'autre', 'non_concerne']
 const SHAPE_LABELS = { rond: 'Rond', coeur: 'Cœur', autre: 'Autre', non_concerne: 'Non concerné' }
