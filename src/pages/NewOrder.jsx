@@ -23,6 +23,41 @@ const INITIAL = {
   photos: [],
 }
 
+function Field({ form, errors, onChange, k, label, required, ...rest }) {
+  return (
+    <div className="space-y-1">
+      <label className="form-label">{label}{required && <span className="text-bordeaux ml-0.5">*</span>}</label>
+      <input
+        className={`form-input ${errors[k] ? 'border-red-300 ring-1 ring-red-300' : ''}`}
+        value={form[k]}
+        onChange={e => onChange(k, e.target.value)}
+        {...rest}
+      />
+      {errors[k] && <p className="text-xs text-red-500">{errors[k]}</p>}
+    </div>
+  )
+}
+
+function FlavorSelect({ form, onChange, activeFlavors, k, label }) {
+  return (
+    <div className="space-y-1">
+      <label className="form-label">{label}</label>
+      <select className="form-select" value={form[k]} onChange={e => onChange(k, e.target.value)}>
+        <option value="">Choisir...</option>
+        {['gourmand', 'fruite', 'premium'].map(cat => {
+          const fs = activeFlavors.filter(f => f.category === cat)
+          if (!fs.length) return null
+          return (
+            <optgroup key={cat} label={cat.charAt(0).toUpperCase() + cat.slice(1)}>
+              {fs.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
+            </optgroup>
+          )
+        })}
+      </select>
+    </div>
+  )
+}
+
 function DateButton({ value, onChange }) {
   const inputRef = useRef(null)
   const formatted = value
