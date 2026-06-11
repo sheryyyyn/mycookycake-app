@@ -279,11 +279,8 @@ function CalendarView({ orders, updateOrder }) {
                       )}
                     </div>
 
-                    {/* Statut */}
-                    <StatusBadge status={o.status} />
-
                     {/* Produit */}
-                    <div className="space-y-1 mt-2">
+                    <div className="space-y-1">
                       <p className="text-sm font-medium text-chocolat">
                         {getProductLabel(o.productType)}
                         {o.productVariant ? <span className="text-warmgray-400 font-normal"> · {o.productVariant}</span> : null}
