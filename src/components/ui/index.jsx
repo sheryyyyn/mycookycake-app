@@ -1,4 +1,5 @@
-import { X, ChevronDown } from 'lucide-react'
+import { X, ChevronDown, ClipboardPaste } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { getStatusLabel, getStatusColor, getPaymentLabel, getPaymentColor } from '../../utils'
 import clsx from 'clsx'
 
