@@ -20,7 +20,7 @@ export default function Orders() {
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterMode, setFilterMode] = useState('')
-  const [view, setView] = useState('table') // 'table' | 'cards' | 'calendar'
+  const [view, setView] = useState(typeof window !== 'undefined' && window.innerWidth < 640 ? 'cards' : 'table')
 
   const filtered = useMemo(() => {
     let list = [...orders]
