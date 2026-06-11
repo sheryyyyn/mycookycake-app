@@ -1,196 +1,272 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  Link2, Copy, ExternalLink, Bell, ChevronRight, AlertTriangle,
-} from 'lucide-react'
+import { Cake, Clock, MapPin, ChevronRight, Layers, FlameKindling, ShoppingCart, Star } from 'lucide-react'
 import useStore from '../store'
-import { startOfMonth, endOfMonth, parseISO } from 'date-fns'
+import { format, parseISO, isToday } from 'date-fns'
+import { fr } from 'date-fns/locale'
 import {
-  todayUpperCase, getUpcomingOrders, getOrdersIn3Days,
-  getTodayOrders, getTomorrowOrders, formatDate, formatAmount,
-  getProductLabel, daysUntil,
+  todayUpperCase,
+  getWeekOrders,
+  aggregateProduction,
+  aggregateGenoises,
+  aggregateFlavors,
+  aggregateSupplements,
+  getTodayPickups,
 } from '../utils'
-import { StatusBadge, ModeBadge } from '../components/ui'
+
+const BENTO_VARIANTS = ['2 parts', '4 parts', '6 parts']
+const LAYER_VARIANTS = ['10 parts', '15 parts', '20-25 parts', '30-35 parts']
 
 export default function Dashboard() {
   const orders = useStore(s => s.orders)
-  const settings = useStore(s => s.settings)
-  const [copied, setCopied] = useState(false)
 
-  const formUrl = window.location.origin + '/formulaire'
+  const weekOrders = getWeekOrders(orders)
+  const { bentoByVariantShape, layerByVariantShape, cupcakesQty, layerCupQty } = aggregateProduction(weekOrders)
+  const genoises = aggregateGenoises(weekOrders)
+  const flavors = aggregateFlavors(weekOrders)
+  const supplements = aggregateSupplements(weekOrders)
+  const todayPickups = getTodayPickups(orders)
 
-  const thisWeek = getUpcomingOrders(orders)
-
-  const monthStart = startOfMonth(new Date())
-  const monthEnd = endOfMonth(new Date())
-  const thisMonthCA = orders
-    .filter(o => {
-      if (o.status === 'annulee') return false
-      if (!o.deliveryDate) return false
-      const d = parseISO(o.deliveryDate)
-      return d >= monthStart && d <= monthEnd
-    })
-    .reduce((s, o) => s + (Number(o.amountTotal) || 0), 0)
-
-  const upcoming = getUpcomingOrders(orders).slice(0, 6)
-  const in3days = getOrdersIn3Days(orders)
-  const today = getTodayOrders(orders)
-  const tomorrow = getTomorrowOrders(orders)
-  const urgents = [...today, ...tomorrow, ...in3days].filter(
-    (o, i, arr) => arr.findIndex(x => x.id === o.id) === i
-  )
-
-  function copyLink() {
-    navigator.clipboard.writeText(formUrl)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const shapes = ['rond', 'coeur']
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-7">
         <p className="text-xs font-semibold text-warmgray-400 uppercase tracking-widest mb-1">
           {todayUpperCase()}
         </p>
-        <h1 className="font-playfair text-4xl font-bold text-chocolat leading-tight">Bonjour.</h1>
-        <p className="text-warmgray-400 mt-1 text-sm">Voici un aperçu de votre atelier aujourd'hui.</p>
+        <h1 className="font-playfair text-4xl font-bold text-chocolat leading-tight">Production de la semaine</h1>
+        <p className="text-warmgray-400 mt-1 text-sm">{weekOrders.length} commande{weekOrders.length !== 1 ? 's' : ''} cette semaine</p>
       </div>
 
-      {/* Quick summary banner */}
-      <div className="grid grid-cols-3 gap-3 mb-7">
-        <div className="bg-white border border-warmgray-100 rounded-2xl px-4 py-4 shadow-soft text-center">
-          <p className="text-xs font-semibold text-warmgray-400 uppercase tracking-widest mb-1">Demain</p>
-          <p className="font-playfair text-3xl font-bold text-chocolat leading-none">{tomorrow.length}</p>
-          <p className="text-xs text-warmgray-400 mt-1">commande{tomorrow.length > 1 ? 's' : ''} à préparer</p>
-        </div>
-        <div className="bg-white border border-warmgray-100 rounded-2xl px-4 py-4 shadow-soft text-center">
-          <p className="text-xs font-semibold text-warmgray-400 uppercase tracking-widest mb-1">Cette semaine</p>
-          <p className="font-playfair text-3xl font-bold text-chocolat leading-none">{thisWeek.length}</p>
-          <p className="text-xs text-warmgray-400 mt-1">commande{thisWeek.length > 1 ? 's' : ''} dans les 7 jours</p>
-        </div>
-        <div className="bg-rose-50 border border-rose-100 rounded-2xl px-4 py-4 shadow-soft text-center">
-          <p className="text-xs font-semibold text-bordeaux/60 uppercase tracking-widest mb-1">Ce mois</p>
-          <p className="font-playfair text-3xl font-bold text-bordeaux leading-none">{formatAmount(thisMonthCA)}</p>
-          <p className="text-xs text-bordeaux/50 mt-1">de chiffre d'affaire</p>
-        </div>
-      </div>
+      <div className="grid lg:grid-cols-2 gap-5">
+        {/* Bloc: Production */}
+        <div className="card">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
+              <Cake size={16} className="text-bordeaux" />
+            </div>
+            <h2 className="font-semibold text-chocolat">Gâteaux à réaliser</h2>
+          </div>
 
-      {/* Form link encart */}
-      <div className="bg-gradient-to-r from-rose-100 to-rose-50 border border-rose-200 rounded-2xl p-5 mb-7 flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="w-10 h-10 rounded-full bg-rose-200 flex items-center justify-center flex-shrink-0">
-            <Link2 size={18} className="text-bordeaux" />
-          </div>
-          <div className="min-w-0">
-            <p className="font-semibold text-bordeaux text-sm">Lien de commande client</p>
-            <p className="text-xs text-warmgray-500 mt-0.5">Copiez ce lien et envoyez-le à vos clientes après validation.</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <a
-            href="/formulaire"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-secondary text-sm gap-1.5"
-          >
-            <ExternalLink size={13} />
-            Voir le formulaire
-          </a>
-          <button onClick={copyLink} className="btn-primary text-sm gap-1.5">
-            <Copy size={13} />
-            {copied ? 'Copié !' : 'Copier le lien'}
-          </button>
-        </div>
-      </div>
-
-      {/* Urgent reminders */}
-      {urgents.length > 0 && (
-        <div className="mb-7">
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle size={16} className="text-amber-500" />
-            <h2 className="font-semibold text-sm text-chocolat">Rappels urgents</h2>
-          </div>
-          <div className="space-y-2">
-            {urgents.map(o => {
-              const days = daysUntil(o.deliveryDate)
-              return (
-                <Link key={o.id} to={`/commandes/${o.id}`} className="block">
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3 hover:bg-amber-100 transition-colors">
-                    <Bell size={15} className="text-amber-500 flex-shrink-0" />
-                    <p className="text-sm text-amber-800 flex-1">
-                      Commande de <strong>{o.clientFirstName}</strong>{' '}
-                      {days === 0 ? "aujourd'hui" : days === 1 ? 'demain' : `dans ${days} jours`}
-                      {' — '}{getProductLabel(o.productType)} · {o.deliveryMode === 'livraison' ? 'Livraison' : 'Retrait'} à {o.deliveryTime}
-                    </p>
-                    <ChevronRight size={14} className="text-amber-400 flex-shrink-0" />
+          {weekOrders.length === 0 ? (
+            <p className="text-sm text-warmgray-400 text-center py-4">Aucune commande cette semaine</p>
+          ) : (
+            <div className="space-y-4">
+              {/* Bento Cakes */}
+              {BENTO_VARIANTS.some(v => shapes.some(s => bentoByVariantShape[`${v}|${s}`])) && (
+                <div>
+                  <p className="text-xs font-semibold text-warmgray-400 uppercase tracking-wide mb-2">Bento Cakes</p>
+                  <div className="space-y-1">
+                    {BENTO_VARIANTS.map(v =>
+                      shapes.map(s => {
+                        const count = bentoByVariantShape[`${v}|${s}`]
+                        if (!count) return null
+                        return (
+                          <div key={`${v}|${s}`} className="flex items-center justify-between py-1 border-b border-rose-50 last:border-0">
+                            <span className="text-sm text-chocolat-light">{v} • {s === 'coeur' ? 'Cœur' : 'Rond'}</span>
+                            <span className="text-sm font-bold text-bordeaux">× {count}</span>
+                          </div>
+                        )
+                      })
+                    )}
                   </div>
-                </Link>
-              )
-            })}
-          </div>
-        </div>
-      )}
+                </div>
+              )}
 
-      {/* Upcoming orders */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="font-playfair font-semibold text-chocolat text-xl">Prochaines commandes</h2>
-            <p className="text-sm text-warmgray-400 mt-0.5">Les livraisons et retraits à venir</p>
+              {/* Layer Cakes */}
+              {LAYER_VARIANTS.some(v => shapes.some(s => layerByVariantShape[`${v}|${s}`])) && (
+                <div>
+                  <p className="text-xs font-semibold text-warmgray-400 uppercase tracking-wide mb-2">Layer Cakes</p>
+                  <div className="space-y-1">
+                    {LAYER_VARIANTS.map(v =>
+                      shapes.map(s => {
+                        const count = layerByVariantShape[`${v}|${s}`]
+                        if (!count) return null
+                        return (
+                          <div key={`${v}|${s}`} className="flex items-center justify-between py-1 border-b border-rose-50 last:border-0">
+                            <span className="text-sm text-chocolat-light">{v} • {s === 'coeur' ? 'Cœur' : 'Rond'}</span>
+                            <span className="text-sm font-bold text-bordeaux">× {count}</span>
+                          </div>
+                        )
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Autres */}
+              {(cupcakesQty > 0 || layerCupQty > 0) && (
+                <div>
+                  <p className="text-xs font-semibold text-warmgray-400 uppercase tracking-wide mb-2">Autres</p>
+                  <div className="space-y-1">
+                    {cupcakesQty > 0 && (
+                      <div className="flex items-center justify-between py-1 border-b border-rose-50 last:border-0">
+                        <span className="text-sm text-chocolat-light">Cupcakes</span>
+                        <span className="text-sm font-bold text-bordeaux">× {cupcakesQty}</span>
+                      </div>
+                    )}
+                    {layerCupQty > 0 && (
+                      <div className="flex items-center justify-between py-1">
+                        <span className="text-sm text-chocolat-light">Layer Cups</span>
+                        <span className="text-sm font-bold text-bordeaux">× {layerCupQty}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Bloc: Génoises */}
+        <div className="card">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
+              <Layers size={16} className="text-bordeaux" />
+            </div>
+            <h2 className="font-semibold text-chocolat">Génoises à préparer</h2>
           </div>
-          <Link to="/commandes" className="btn-secondary text-sm">
-            Tout voir
+
+          {genoises.total === 0 ? (
+            <p className="text-sm text-warmgray-400 text-center py-4">Aucune génoise cette semaine</p>
+          ) : (
+            <div className="space-y-2">
+              {genoises.bento > 0 && (
+                <div className="flex items-center justify-between py-1.5 border-b border-rose-50">
+                  <span className="text-sm text-chocolat-light">Bento (2 tranches / gâteau)</span>
+                  <span className="text-sm font-semibold text-chocolat">{genoises.bento} tranches</span>
+                </div>
+              )}
+              {genoises.layer10 > 0 && (
+                <div className="flex items-center justify-between py-1.5 border-b border-rose-50">
+                  <span className="text-sm text-chocolat-light">Layer 10 parts (3 tranches)</span>
+                  <span className="text-sm font-semibold text-chocolat">{genoises.layer10} tranches</span>
+                </div>
+              )}
+              {genoises.layer15 > 0 && (
+                <div className="flex items-center justify-between py-1.5 border-b border-rose-50">
+                  <span className="text-sm text-chocolat-light">Layer 15 parts (4 tranches)</span>
+                  <span className="text-sm font-semibold text-chocolat">{genoises.layer15} tranches</span>
+                </div>
+              )}
+              {genoises.layer2025 > 0 && (
+                <div className="flex items-center justify-between py-1.5 border-b border-rose-50">
+                  <span className="text-sm text-chocolat-light">Layer 20/25 parts (5 tranches)</span>
+                  <span className="text-sm font-semibold text-chocolat">{genoises.layer2025} tranches</span>
+                </div>
+              )}
+              {genoises.layer3035 > 0 && (
+                <div className="flex items-center justify-between py-1.5 border-b border-rose-50">
+                  <span className="text-sm text-chocolat-light">Layer 30/35 parts (5 tranches)</span>
+                  <span className="text-sm font-semibold text-chocolat">{genoises.layer3035} tranches</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between pt-2 mt-1">
+                <span className="text-sm font-bold text-chocolat">Total</span>
+                <span className="text-lg font-bold text-bordeaux">{genoises.total} tranches</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bloc: Saveurs */}
+        <div className="card">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
+              <Star size={16} className="text-bordeaux" />
+            </div>
+            <h2 className="font-semibold text-chocolat">Saveurs de la semaine</h2>
+          </div>
+
+          {flavors.length === 0 ? (
+            <p className="text-sm text-warmgray-400 text-center py-4">Aucune saveur renseignée</p>
+          ) : (
+            <div className="space-y-1">
+              {flavors.map(([name, count]) => (
+                <div key={name} className="flex items-center justify-between py-1.5 border-b border-rose-50 last:border-0">
+                  <span className="text-sm text-chocolat-light">{name}</span>
+                  <span className="badge bg-rose-100 text-bordeaux">× {count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Bloc: Suppléments */}
+        <div className="card">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
+              <ShoppingCart size={16} className="text-bordeaux" />
+            </div>
+            <h2 className="font-semibold text-chocolat">Suppléments à prévoir</h2>
+          </div>
+
+          {supplements.length === 0 ? (
+            <p className="text-sm text-warmgray-400 text-center py-4">Aucun supplément cette semaine</p>
+          ) : (
+            <div className="space-y-1">
+              {supplements.map(([name, count]) => (
+                <div key={name} className="flex items-center justify-between py-1.5 border-b border-rose-50 last:border-0">
+                  <span className="text-sm text-chocolat-light">{name}</span>
+                  <span className="badge bg-rose-100 text-bordeaux">× {count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bloc: Retraits / Livraisons du jour */}
+      <div className="card mt-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-bordeaux flex items-center justify-center">
+              <Clock size={16} className="text-white" />
+            </div>
+            <h2 className="font-semibold text-chocolat">Retraits & Livraisons du jour</h2>
+          </div>
+          <Link to="/commandes" className="btn-secondary text-xs py-1.5 px-3">
+            Toutes les commandes
           </Link>
         </div>
 
-        {upcoming.length === 0 ? (
-          <div className="card text-center py-12">
-            <span className="text-3xl block mb-2">🎂</span>
-            <p className="text-warmgray-400 text-sm">Aucune commande à venir</p>
+        {todayPickups.length === 0 ? (
+          <div className="text-center py-6">
+            <p className="text-warmgray-400 text-sm">Aucun retrait ni livraison aujourd'hui</p>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {upcoming.map(order => (
-              <OrderCard key={order.id} order={order} />
+          <div className="space-y-2">
+            {todayPickups.map(o => (
+              <Link key={o.id} to={`/commandes/${o.id}`}>
+                <div className="flex items-center gap-4 px-4 py-3 rounded-xl bg-rose-50 hover:bg-rose-100 transition-colors group">
+                  <div className="w-16 text-right flex-shrink-0">
+                    <span className="font-bold text-bordeaux text-sm">{o.deliveryTime || '—'}</span>
+                  </div>
+                  <div className="w-px h-8 bg-rose-200" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-chocolat text-sm">{o.clientInstagram || o.clientFirstName}</span>
+                      <span className={`badge text-xs ${o.deliveryMode === 'livraison' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                        {o.deliveryMode === 'livraison' ? (
+                          <><MapPin size={10} /> Livraison</>
+                        ) : (
+                          'Retrait'
+                        )}
+                      </span>
+                    </div>
+                    <p className="text-xs text-warmgray-400 mt-0.5 truncate">
+                      {o.productType === 'bento_cake' ? 'Bento Cake' : o.productType === 'layer_cake' ? 'Layer Cake' : o.productType} · {o.productVariant}
+                      {o.shape && o.shape !== 'non_concerne' && ` · ${o.shape === 'coeur' ? 'Cœur' : 'Rond'}`}
+                    </p>
+                  </div>
+                  <ChevronRight size={14} className="text-warmgray-400 group-hover:text-bordeaux transition-colors" />
+                </div>
+              </Link>
             ))}
           </div>
         )}
       </div>
     </div>
-  )
-}
-
-function OrderCard({ order }) {
-  const days = daysUntil(order.deliveryDate)
-  return (
-    <Link to={`/commandes/${order.id}`}>
-      <div className="card hover:border-rose-300 hover:shadow-soft transition-all cursor-pointer group">
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div>
-            <p className="text-xs text-warmgray-400 font-medium">{getProductLabel(order.productType)}</p>
-            <p className="font-semibold text-chocolat">{order.clientFirstName}</p>
-            <p className="text-xs text-rose-500">{order.clientInstagram}</p>
-          </div>
-          <StatusBadge status={order.status} />
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs text-warmgray-400">
-              {formatDate(order.deliveryDate)} · {order.deliveryTime}
-            </p>
-            <ModeBadge mode={order.deliveryMode} />
-          </div>
-          <span className="text-xs text-bordeaux font-semibold group-hover:underline flex items-center gap-0.5">
-            Voir <ChevronRight size={12} />
-          </span>
-        </div>
-        {days !== null && days <= 3 && days >= 0 && (
-          <div className="mt-2 text-xs text-amber-600 bg-amber-50 rounded-lg px-2 py-1 border border-amber-100 font-medium">
-            {days === 0 ? "⚡ Aujourd'hui !" : days === 1 ? '⚡ Demain !' : `⚡ Dans ${days} jours`}
-          </div>
-        )}
-      </div>
-    </Link>
   )
 }
