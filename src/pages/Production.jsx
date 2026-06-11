@@ -275,24 +275,31 @@ function GenoisesView() {
   )
 }
 
+function getOrderDetailLabel(o) {
+  const type = getProductLabel(o.productType)
+  const variant = o.productVariant ? ` ${o.productVariant}` : ''
+  return `${type}${variant}`
+}
+
 function FourrageView() {
   const orders = useStore(s => s.orders)
   const weekOrders = getWeekOrders(orders)
   const activeOrders = weekOrders.filter(o => o.status !== 'annulee')
 
-  const counts = {}
+  // group orders by flavor, each order can appear under main and secondary
+  const byFlavor = {}
   for (const o of activeOrders) {
-    const flavors = [o.flavorMain, o.flavorSecondary].filter(Boolean)
-    for (const f of flavors) {
-      counts[f] = (counts[f] || 0) + 1
+    for (const f of [o.flavorMain, o.flavorSecondary].filter(Boolean)) {
+      if (!byFlavor[f]) byFlavor[f] = []
+      byFlavor[f].push(o)
     }
   }
 
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1])
-  const total = Object.values(counts).reduce((s, n) => s + n, 0)
+  const sorted = Object.entries(byFlavor).sort((a, b) => b[1].length - a[1].length)
+  const total = sorted.reduce((s, [, arr]) => s + arr.length, 0)
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-full">
       <h2 className="font-semibold text-chocolat mb-4">Fourrages à préparer — semaine en cours</h2>
       {sorted.length === 0 ? (
         <div className="card text-center py-10">
@@ -300,16 +307,32 @@ function FourrageView() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
-            {sorted.map(([flavor, count]) => (
-              <div key={flavor} className="card flex flex-col items-center gap-2 py-5">
-                <span className="text-3xl font-bold text-bordeaux">{count}</span>
-                <span className="text-sm font-semibold text-chocolat text-center leading-tight">{flavor}</span>
-                <span className="text-xs text-warmgray-400">{count === 1 ? 'gâteau' : 'gâteaux'}</span>
-              </div>
-            ))}
+          <div className="flex flex-wrap gap-3 mb-4">
+            {sorted.map(([flavor, flavorOrders]) => {
+              // aggregate detail lines with counts
+              const detailCounts = {}
+              for (const o of flavorOrders) {
+                const label = getOrderDetailLabel(o)
+                detailCounts[label] = (detailCounts[label] || 0) + 1
+              }
+              return (
+                <div key={flavor} className="card flex flex-col gap-3 min-w-[160px]">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-4xl font-bold text-bordeaux">{flavorOrders.length}</span>
+                    <span className="text-xs font-bold text-chocolat uppercase tracking-wide text-center">{flavor}</span>
+                  </div>
+                  <div className="border-t border-rose-50 pt-2 space-y-1">
+                    {Object.entries(detailCounts).map(([label, count]) => (
+                      <p key={label} className="text-xs text-chocolat-light text-center">
+                        {label}{count > 1 ? <span className="font-semibold text-bordeaux"> × {count}</span> : ''}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
           </div>
-          <div className="card flex items-center justify-between">
+          <div className="card flex items-center justify-between max-w-sm">
             <span className="font-bold text-chocolat">Total fourrages</span>
             <span className="text-2xl font-bold text-bordeaux">{total}</span>
           </div>
