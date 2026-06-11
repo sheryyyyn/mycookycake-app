@@ -299,6 +299,17 @@ function CalendarView({ orders, updateOrder }) {
                           {[o.flavorMain, o.flavorSecondary].filter(Boolean).join(' + ')}
                         </p>
                       )}
+
+                      {/* Statut confirmation */}
+                      {(o.status === 'nouvelle' || o.status === 'confirmee') && (
+                        <span className={`inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                          o.status === 'confirmee'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-blue-50 text-blue-700 border-blue-200'
+                        }`}>
+                          {o.status === 'confirmee' ? 'Confirmée' : 'À confirmer'}
+                        </span>
+                      )}
                     </div>
 
                     {/* Heure de retrait si absente */}
