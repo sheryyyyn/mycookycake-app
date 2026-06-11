@@ -58,28 +58,85 @@ function FlavorSelect({ form, onChange, activeFlavors, k, label }) {
   )
 }
 
-function DateButton({ value, onChange }) {
-  const formatted = value
-    ? format(parseISO(value), 'EEE d MMMM', { locale: fr })
-    : null
+function DatePicker({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const [current, setCurrent] = useState(() => value ? parseISO(value) : new Date())
+
+  const formatted = value ? format(parseISO(value), 'EEE d MMMM', { locale: fr }) : null
+  const monthStart = startOfMonth(current)
+  const days = eachDayOfInterval({ start: monthStart, end: endOfMonth(current) })
+  const startPad = (getDay(monthStart) + 6) % 7
+
+  function select(day) {
+    onChange(format(day, 'yyyy-MM-dd'))
+    setOpen(false)
+  }
 
   return (
     <div className="relative">
-      {/* Affichage stylisé */}
-      <div className="form-input flex items-center gap-2 pointer-events-none">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="form-input text-left flex items-center gap-2 w-full"
+      >
         <CalendarDays size={15} className="text-bordeaux flex-shrink-0" />
         <span className={value ? 'text-chocolat capitalize font-medium' : 'text-warmgray-400'}>
           {formatted ?? 'Choisir une date'}
         </span>
-      </div>
-      {/* Input natif par-dessus, opacity quasi-nulle mais interactive sur iOS */}
-      <input
-        type="date"
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        style={{ opacity: 0.01 }}
-        className="absolute inset-0 w-full h-full cursor-pointer"
-      />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1 bg-white rounded-2xl shadow-xl border border-rose-100 p-4 w-72">
+          {/* Navigation mois */}
+          <div className="flex items-center justify-between mb-3">
+            <button type="button" onClick={() => setCurrent(d => subMonths(d, 1))} className="p-1.5 rounded-lg hover:bg-rose-50 text-warmgray-400 hover:text-bordeaux">
+              <ChevronLeft size={16} />
+            </button>
+            <span className="text-sm font-semibold text-chocolat capitalize">
+              {format(current, 'MMMM yyyy', { locale: fr })}
+            </span>
+            <button type="button" onClick={() => setCurrent(d => addMonths(d, 1))} className="p-1.5 rounded-lg hover:bg-rose-50 text-warmgray-400 hover:text-bordeaux">
+              <ChevronRight size={16} />
+            </button>
+          </div>
+
+          {/* Jours de la semaine */}
+          <div className="grid grid-cols-7 mb-1">
+            {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
+              <div key={i} className="text-center text-[11px] font-semibold text-warmgray-400 py-1">{d}</div>
+            ))}
+          </div>
+
+          {/* Grille des jours */}
+          <div className="grid grid-cols-7 gap-0.5">
+            {Array(startPad).fill(null).map((_, i) => <div key={`p${i}`} />)}
+            {days.map(day => {
+              const key = format(day, 'yyyy-MM-dd')
+              const selected = key === value
+              const today = isToday(day)
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => select(day)}
+                  className={`
+                    text-center text-sm py-1.5 rounded-lg font-medium transition-colors
+                    ${selected ? 'bg-bordeaux text-white' : ''}
+                    ${today && !selected ? 'border border-bordeaux text-bordeaux' : ''}
+                    ${!selected && !today ? 'text-warmgray-600 hover:bg-rose-50' : ''}
+                  `}
+                >
+                  {format(day, 'd')}
+                </button>
+              )
+            })}
+          </div>
+
+          <button type="button" onClick={() => setOpen(false)} className="mt-3 w-full text-xs text-warmgray-400 hover:text-bordeaux text-center">
+            Fermer
+          </button>
+        </div>
+      )}
     </div>
   )
 }
