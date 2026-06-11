@@ -217,9 +217,43 @@ export function StatusSelect({ current, onChange }) {
 }
 
 // ── PhotoGallery ──────────────────────────────────────────────────
+function readFileAsDataUrl(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader()
+    reader.onload = e => resolve(e.target.result)
+    reader.readAsDataURL(file)
+  })
+}
+
 export function PhotoGallery({ photos = [], onDelete, onAdd }) {
+  const zoneRef = useRef(null)
+  const [pasted, setPasted] = useState(false)
+
+  useEffect(() => {
+    if (!onAdd) return
+
+    async function handlePaste(e) {
+      const items = Array.from(e.clipboardData?.items || [])
+      const imageItems = items.filter(item => item.type.startsWith('image/'))
+      if (!imageItems.length) return
+      e.preventDefault()
+      for (const item of imageItems) {
+        const file = item.getAsFile()
+        if (!file) continue
+        const dataUrl = await readFileAsDataUrl(file)
+        // call onAdd with a synthetic event-like object
+        onAdd({ target: { files: [file] }, _dataUrl: dataUrl })
+      }
+      setPasted(true)
+      setTimeout(() => setPasted(false), 1500)
+    }
+
+    window.addEventListener('paste', handlePaste)
+    return () => window.removeEventListener('paste', handlePaste)
+  }, [onAdd])
+
   return (
-    <div>
+    <div ref={zoneRef}>
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
         {photos.map((src, i) => (
           <div key={i} className="relative group aspect-square">
@@ -240,9 +274,13 @@ export function PhotoGallery({ photos = [], onDelete, onAdd }) {
           </div>
         ))}
         {onAdd && (
-          <label className="aspect-square rounded-xl border-2 border-dashed border-beige flex flex-col items-center justify-center cursor-pointer hover:border-rose-300 hover:bg-rose-50 transition-colors">
+          <label className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors ${
+            pasted ? 'border-green-400 bg-green-50' : 'border-beige hover:border-rose-300 hover:bg-rose-50'
+          }`}>
             <span className="text-2xl text-warmgray-400">+</span>
-            <span className="text-xs text-warmgray-400">Ajouter</span>
+            <span className="text-xs text-warmgray-400 text-center px-1 leading-tight">
+              {pasted ? '✓ Collé !' : 'Ajouter'}
+            </span>
             <input
               type="file"
               accept="image/*"
@@ -253,6 +291,12 @@ export function PhotoGallery({ photos = [], onDelete, onAdd }) {
           </label>
         )}
       </div>
+      {onAdd && (
+        <p className="text-xs text-warmgray-400 mt-2 flex items-center gap-1">
+          <ClipboardPaste size={12} />
+          Vous pouvez aussi coller une image avec Ctrl+V / ⌘+V
+        </p>
+      )}
       {photos.length === 0 && !onAdd && (
         <p className="text-sm text-warmgray-400 italic">Aucune photo d'inspiration</p>
       )}
