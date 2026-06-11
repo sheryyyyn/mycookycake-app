@@ -28,11 +28,6 @@ function RequireAuth({ children }) {
 }
 
 export default function App() {
-  const initSeed = useStore(s => s.initSeed)
-
-  useEffect(() => {
-    initSeed()
-  }, [initSeed])
 
   return (
     <Routes>
