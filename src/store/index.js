@@ -34,11 +34,48 @@ const useStore = create((set, get) => ({
       supabase.from('app_data').select('value').eq('key', 'settings').maybeSingle(),
     ])
 
+    const remoteOrders = ordersRes.data?.map(r => r.data) ?? []
+    const remoteClients = clientsRes.data?.map(r => r.data) ?? []
+    const remoteCatalog = catalogRes.data?.value ?? null
+    const remoteSettings = settingsRes.data?.value ?? null
+
+    // ── Migration depuis localStorage (une seule fois) ─────────────────────
+    if (remoteOrders.length === 0 && remoteClients.length === 0) {
+      try {
+        const raw = localStorage.getItem('mycookycake-v1')
+        if (raw) {
+          const local = JSON.parse(raw)?.state ?? {}
+          const localOrders = local.orders ?? []
+          const localClients = local.clients ?? []
+          const localCatalog = local.catalog ?? null
+          const localSettings = local.settings ?? null
+
+          if (localOrders.length > 0) {
+            await supabase.from('orders').upsert(localOrders.map(o => ({ id: o.id, data: o })))
+          }
+          if (localClients.length > 0) {
+            await supabase.from('clients').upsert(localClients.map(c => ({ id: c.id, data: c })))
+          }
+          if (localCatalog) await saveAppData('catalog', localCatalog)
+          if (localSettings) await saveAppData('settings', localSettings)
+
+          set({
+            orders: localOrders,
+            clients: localClients,
+            catalog: localCatalog ?? DEFAULT_CATALOG,
+            settings: { ...DEFAULT_SETTINGS, ...(localSettings ?? {}) },
+            loading: false,
+          })
+          return
+        }
+      } catch (_) {}
+    }
+
     set({
-      orders: ordersRes.data?.map(r => r.data) ?? [],
-      clients: clientsRes.data?.map(r => r.data) ?? [],
-      catalog: catalogRes.data?.value ?? DEFAULT_CATALOG,
-      settings: { ...DEFAULT_SETTINGS, ...(settingsRes.data?.value ?? {}) },
+      orders: remoteOrders,
+      clients: remoteClients,
+      catalog: remoteCatalog ?? DEFAULT_CATALOG,
+      settings: { ...DEFAULT_SETTINGS, ...(remoteSettings ?? {}) },
       loading: false,
     })
   },
