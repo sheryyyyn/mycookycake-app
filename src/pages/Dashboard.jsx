@@ -1,266 +1,300 @@
 import { Link } from 'react-router-dom'
-import { Cake, Clock, MapPin, ChevronRight, Layers, FlameKindling, ShoppingCart, Star } from 'lucide-react'
+import { ClipboardList, Users, DollarSign, Clock, Cake, ChevronLeft, ChevronRight, MapPin } from 'lucide-react'
 import useStore from '../store'
-import { format, parseISO, isToday } from 'date-fns'
+import { format, parseISO, isToday, startOfDay, addDays, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, isSameMonth } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { useState } from 'react'
 import {
   todayUpperCase,
-  getWeekOrders,
-  aggregateProduction,
-  aggregateGenoises,
-  aggregateFlavors,
-  aggregateSupplements,
+  getUpcomingOrders,
   getTodayPickups,
+  formatAmount,
+  getStatusColor,
+  getStatusLabel,
+  getProductLabel,
+  formatDateShort,
+  STATUS_CONFIG,
 } from '../utils'
 
-const BENTO_VARIANTS = ['2 parts', '4 parts', '6 parts']
-const LAYER_VARIANTS = ['10 parts', '15 parts', '20-25 parts', '30-35 parts']
+// ── Donut Chart ───────────────────────────────────────────────────────────────
+function DonutChart({ segments }) {
+  const total = segments.reduce((s, x) => s + x.value, 0)
+  if (total === 0) return (
+    <div className="flex items-center justify-center h-40 text-warmgray-400 text-sm">Aucune donnée</div>
+  )
 
-export default function Dashboard() {
-  const orders = useStore(s => s.orders)
+  let offset = 0
+  const r = 52
+  const cx = 64
+  const cy = 64
+  const circ = 2 * Math.PI * r
+  const strokeWidth = 18
 
-  const weekOrders = getWeekOrders(orders)
-  const { bentoByVariantShape, layerByVariantShape, cupcakesQty, layerCupQty } = aggregateProduction(weekOrders)
-  const genoises = aggregateGenoises(weekOrders)
-  const flavors = aggregateFlavors(weekOrders)
-  const supplements = aggregateSupplements(weekOrders)
-  const todayPickups = getTodayPickups(orders)
-
-  const shapes = ['rond', 'coeur']
+  const arcs = segments.map(seg => {
+    const pct = seg.value / total
+    const dash = pct * circ
+    const arc = { ...seg, dash, offset: circ - offset, pct }
+    offset += dash
+    return arc
+  })
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="flex flex-col items-center gap-4">
+      <div className="relative">
+        <svg width={128} height={128} viewBox="0 0 128 128">
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f3f4f6" strokeWidth={strokeWidth} />
+          {arcs.map((arc, i) => (
+            <circle
+              key={i}
+              cx={cx} cy={cy} r={r}
+              fill="none"
+              stroke={arc.color}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${arc.dash} ${circ - arc.dash}`}
+              strokeDashoffset={arc.offset}
+              strokeLinecap="butt"
+              transform="rotate(-90 64 64)"
+            />
+          ))}
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-2xl font-bold text-chocolat">{Math.round((arcs[0]?.pct ?? 0) * 100)}%</span>
+          <span className="text-[10px] text-warmgray-400">Confirmées</span>
+        </div>
+      </div>
+      <div className="space-y-1.5 w-full">
+        {segments.map((seg, i) => (
+          <div key={i} className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: seg.color }} />
+              <span className="text-warmgray-500">{seg.label}</span>
+            </div>
+            <span className="font-semibold text-chocolat">{Math.round((seg.value / total) * 100)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Mini Calendar ─────────────────────────────────────────────────────────────
+function MiniCalendar({ orders }) {
+  const [current, setCurrent] = useState(new Date())
+  const monthStart = startOfMonth(current)
+  const monthEnd = endOfMonth(current)
+  const days = eachDayOfInterval({ start: monthStart, end: monthEnd })
+
+  // Pad start: week starts Monday (1)
+  const startPad = (getDay(monthStart) + 6) % 7
+  const pickupDates = new Set(
+    orders
+      .filter(o => o.deliveryDate && o.status !== 'annulee')
+      .map(o => o.deliveryDate.slice(0, 10))
+  )
+
+  return (
+    <div className="select-none">
+      <div className="flex items-center justify-between mb-3">
+        <button onClick={() => setCurrent(d => addDays(startOfMonth(d), -1))} className="p-1 rounded hover:bg-rose-50 text-warmgray-400 hover:text-bordeaux transition-colors">
+          <ChevronLeft size={14} />
+        </button>
+        <span className="text-xs font-semibold text-chocolat capitalize">
+          {format(current, 'MMMM yyyy', { locale: fr })}
+        </span>
+        <button onClick={() => setCurrent(d => addDays(endOfMonth(d), 1))} className="p-1 rounded hover:bg-rose-50 text-warmgray-400 hover:text-bordeaux transition-colors">
+          <ChevronRight size={14} />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-7 gap-0.5 mb-1">
+        {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
+          <div key={i} className="text-center text-[10px] font-semibold text-warmgray-400 py-0.5">{d}</div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-0.5">
+        {Array(startPad).fill(null).map((_, i) => <div key={`pad-${i}`} />)}
+        {days.map(day => {
+          const key = format(day, 'yyyy-MM-dd')
+          const hasPickup = pickupDates.has(key)
+          const today = isToday(day)
+          return (
+            <div
+              key={key}
+              className={`
+                text-center text-[11px] py-1 rounded-md font-medium transition-colors
+                ${today ? 'bg-bordeaux text-white' : ''}
+                ${hasPickup && !today ? 'bg-rose-100 text-bordeaux font-bold' : ''}
+                ${!today && !hasPickup ? 'text-warmgray-500' : ''}
+              `}
+            >
+              {format(day, 'd')}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ── Main Dashboard ────────────────────────────────────────────────────────────
+export default function Dashboard() {
+  const orders = useStore(s => s.orders)
+  const clients = useStore(s => s.clients)
+
+  const activeOrders = orders.filter(o => o.status !== 'annulee')
+  const totalCollected = activeOrders.reduce((s, o) => s + (Number(o.amountPaid) || 0), 0)
+  const upcomingPickups = getUpcomingOrders(orders)
+  const todayPickups = getTodayPickups(orders)
+
+  // Week production orders
+  const weekOrders = activeOrders.filter(o => {
+    if (!o.deliveryDate) return false
+    const d = parseISO(o.deliveryDate)
+    const now = startOfDay(new Date())
+    return d >= now && d <= addDays(now, 7)
+  })
+
+  // Status breakdown for donut
+  const statusCounts = { confirmee: 0, nouvelle: 0, fini: 0, remis: 0 }
+  activeOrders.forEach(o => { if (statusCounts[o.status] !== undefined) statusCounts[o.status]++ })
+
+  const donutSegments = [
+    { label: 'Confirmée', value: statusCounts.confirmee, color: '#f59e0b' },
+    { label: 'Nouvelle', value: statusCounts.nouvelle, color: '#6366f1' },
+    { label: 'Finie', value: statusCounts.fini, color: '#10b981' },
+    { label: 'Remise', value: statusCounts.remis, color: '#e879a0' },
+  ].filter(s => s.value > 0)
+
+  // Recent orders for table (last 5 non-cancelled)
+  const recentOrders = [...activeOrders]
+    .sort((a, b) => (b.createdAt || b.id || '').localeCompare(a.createdAt || a.id || ''))
+    .slice(0, 5)
+
+  const stats = [
+    { label: 'Total commandes', value: orders.filter(o => o.status !== 'annulee').length, sub: 'Commandes actives', icon: ClipboardList, color: 'bg-rose-50 text-bordeaux' },
+    { label: 'Clients', value: clients.length, sub: 'Total clients', icon: Users, color: 'bg-amber-50 text-amber-600' },
+    { label: 'Paiements', value: formatAmount(totalCollected), sub: 'Total encaissé', icon: DollarSign, color: 'bg-violet-50 text-violet-600' },
+    { label: 'Retraits', value: upcomingPickups.length, sub: 'À venir (7j)', icon: Clock, color: 'bg-blue-50 text-blue-600' },
+    { label: 'Production', value: weekOrders.length, sub: 'Cette semaine', icon: Cake, color: 'bg-green-50 text-green-600' },
+  ]
+
+  return (
+    <div className="p-6 max-w-7xl mx-auto space-y-5">
       {/* Header */}
-      <div className="mb-7">
-        <p className="text-xs font-semibold text-warmgray-400 uppercase tracking-widest mb-1">
-          {todayUpperCase()}
-        </p>
-        <h1 className="font-playfair text-4xl font-bold text-chocolat leading-tight">Production de la semaine</h1>
-        <p className="text-warmgray-400 mt-1 text-sm">{weekOrders.length} commande{weekOrders.length !== 1 ? 's' : ''} cette semaine</p>
+      <div>
+        <p className="text-xs font-semibold text-warmgray-400 uppercase tracking-widest mb-1">{todayUpperCase()}</p>
+        <h1 className="font-playfair text-3xl font-bold text-chocolat">Tableau de bord</h1>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-5">
-        {/* Bloc: Production */}
-        <div className="card">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
-              <Cake size={16} className="text-bordeaux" />
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {stats.map(s => (
+          <div key={s.label} className="card py-4 px-4 flex items-start gap-3">
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${s.color}`}>
+              <s.icon size={18} />
             </div>
-            <h2 className="font-semibold text-chocolat">Gâteaux à réaliser</h2>
+            <div className="min-w-0">
+              <div className="text-xl font-bold text-chocolat leading-tight">{s.value}</div>
+              <div className="text-[11px] text-warmgray-400 leading-tight">{s.sub}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Middle Section: Table + Donut + Calendar */}
+      <div className="grid lg:grid-cols-[1fr_180px_220px] gap-4">
+        {/* Orders Overview Table */}
+        <div className="card">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-chocolat">Aperçu des commandes</h2>
+            <Link to="/commandes" className="text-xs text-bordeaux hover:underline font-medium">Voir tout</Link>
           </div>
 
-          {weekOrders.length === 0 ? (
-            <p className="text-sm text-warmgray-400 text-center py-4">Aucune commande cette semaine</p>
+          {recentOrders.length === 0 ? (
+            <p className="text-sm text-warmgray-400 text-center py-6">Aucune commande</p>
           ) : (
-            <div className="space-y-4">
-              {/* Bento Cakes */}
-              {BENTO_VARIANTS.some(v => shapes.some(s => bentoByVariantShape[`${v}|${s}`])) && (
-                <div>
-                  <p className="text-xs font-semibold text-warmgray-400 uppercase tracking-wide mb-2">Bento Cakes</p>
-                  <div className="space-y-1">
-                    {BENTO_VARIANTS.map(v =>
-                      shapes.map(s => {
-                        const count = bentoByVariantShape[`${v}|${s}`]
-                        if (!count) return null
-                        return (
-                          <div key={`${v}|${s}`} className="flex items-center justify-between py-1 border-b border-rose-50 last:border-0">
-                            <span className="text-sm text-chocolat-light">{v} • {s === 'coeur' ? 'Cœur' : 'Rond'}</span>
-                            <span className="text-sm font-bold text-bordeaux">× {count}</span>
-                          </div>
-                        )
-                      })
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Layer Cakes */}
-              {LAYER_VARIANTS.some(v => shapes.some(s => layerByVariantShape[`${v}|${s}`])) && (
-                <div>
-                  <p className="text-xs font-semibold text-warmgray-400 uppercase tracking-wide mb-2">Layer Cakes</p>
-                  <div className="space-y-1">
-                    {LAYER_VARIANTS.map(v =>
-                      shapes.map(s => {
-                        const count = layerByVariantShape[`${v}|${s}`]
-                        if (!count) return null
-                        return (
-                          <div key={`${v}|${s}`} className="flex items-center justify-between py-1 border-b border-rose-50 last:border-0">
-                            <span className="text-sm text-chocolat-light">{v} • {s === 'coeur' ? 'Cœur' : 'Rond'}</span>
-                            <span className="text-sm font-bold text-bordeaux">× {count}</span>
-                          </div>
-                        )
-                      })
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Autres */}
-              {(cupcakesQty > 0 || layerCupQty > 0) && (
-                <div>
-                  <p className="text-xs font-semibold text-warmgray-400 uppercase tracking-wide mb-2">Autres</p>
-                  <div className="space-y-1">
-                    {cupcakesQty > 0 && (
-                      <div className="flex items-center justify-between py-1 border-b border-rose-50 last:border-0">
-                        <span className="text-sm text-chocolat-light">Cupcakes</span>
-                        <span className="text-sm font-bold text-bordeaux">× {cupcakesQty}</span>
-                      </div>
-                    )}
-                    {layerCupQty > 0 && (
-                      <div className="flex items-center justify-between py-1">
-                        <span className="text-sm text-chocolat-light">Layer Cups</span>
-                        <span className="text-sm font-bold text-bordeaux">× {layerCupQty}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-rose-100">
+                    <th className="text-left text-[10px] font-semibold text-warmgray-400 uppercase tracking-wide pb-2 pr-3">Client</th>
+                    <th className="text-left text-[10px] font-semibold text-warmgray-400 uppercase tracking-wide pb-2 pr-3">Produit</th>
+                    <th className="text-left text-[10px] font-semibold text-warmgray-400 uppercase tracking-wide pb-2 pr-3">Date</th>
+                    <th className="text-left text-[10px] font-semibold text-warmgray-400 uppercase tracking-wide pb-2 pr-3">Statut</th>
+                    <th className="text-right text-[10px] font-semibold text-warmgray-400 uppercase tracking-wide pb-2">Montant</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-rose-50">
+                  {recentOrders.map(o => (
+                    <tr key={o.id} className="hover:bg-rose-50/40 transition-colors">
+                      <td className="py-2.5 pr-3">
+                        <Link to={`/commandes/${o.id}`} className="font-medium text-chocolat hover:text-bordeaux transition-colors">
+                          {o.clientInstagram || o.clientFirstName || '—'}
+                        </Link>
+                      </td>
+                      <td className="py-2.5 pr-3 text-warmgray-500 text-xs">{getProductLabel(o.productType)}</td>
+                      <td className="py-2.5 pr-3 text-warmgray-500 text-xs whitespace-nowrap">{formatDateShort(o.deliveryDate)}</td>
+                      <td className="py-2.5 pr-3">
+                        <span className={`badge text-[10px] border ${getStatusColor(o.status)}`}>
+                          {getStatusLabel(o.status)}
+                        </span>
+                      </td>
+                      <td className="py-2.5 text-right font-semibold text-chocolat text-xs">{formatAmount(o.amountTotal)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
 
-        {/* Bloc: Génoises */}
+        {/* Order Progress Donut */}
         <div className="card">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
-              <Layers size={16} className="text-bordeaux" />
-            </div>
-            <h2 className="font-semibold text-chocolat">Génoises à préparer</h2>
-          </div>
-
-          {genoises.total === 0 ? (
-            <p className="text-sm text-warmgray-400 text-center py-4">Aucune génoise cette semaine</p>
-          ) : (
-            <div className="space-y-2">
-              {genoises.bento > 0 && (
-                <div className="flex items-center justify-between py-1.5 border-b border-rose-50">
-                  <span className="text-sm text-chocolat-light">Bento (2 tranches / gâteau)</span>
-                  <span className="text-sm font-semibold text-chocolat">{genoises.bento} tranches</span>
-                </div>
-              )}
-              {genoises.layer10 > 0 && (
-                <div className="flex items-center justify-between py-1.5 border-b border-rose-50">
-                  <span className="text-sm text-chocolat-light">Layer 10 parts (3 tranches)</span>
-                  <span className="text-sm font-semibold text-chocolat">{genoises.layer10} tranches</span>
-                </div>
-              )}
-              {genoises.layer15 > 0 && (
-                <div className="flex items-center justify-between py-1.5 border-b border-rose-50">
-                  <span className="text-sm text-chocolat-light">Layer 15 parts (4 tranches)</span>
-                  <span className="text-sm font-semibold text-chocolat">{genoises.layer15} tranches</span>
-                </div>
-              )}
-              {genoises.layer2025 > 0 && (
-                <div className="flex items-center justify-between py-1.5 border-b border-rose-50">
-                  <span className="text-sm text-chocolat-light">Layer 20/25 parts (5 tranches)</span>
-                  <span className="text-sm font-semibold text-chocolat">{genoises.layer2025} tranches</span>
-                </div>
-              )}
-              {genoises.layer3035 > 0 && (
-                <div className="flex items-center justify-between py-1.5 border-b border-rose-50">
-                  <span className="text-sm text-chocolat-light">Layer 30/35 parts (5 tranches)</span>
-                  <span className="text-sm font-semibold text-chocolat">{genoises.layer3035} tranches</span>
-                </div>
-              )}
-              <div className="flex items-center justify-between pt-2 mt-1">
-                <span className="text-sm font-bold text-chocolat">Total</span>
-                <span className="text-lg font-bold text-bordeaux">{genoises.total} tranches</span>
-              </div>
-            </div>
-          )}
+          <h2 className="font-semibold text-chocolat mb-4 text-sm">Progression</h2>
+          <DonutChart segments={donutSegments} />
         </div>
 
-        {/* Bloc: Saveurs */}
+        {/* Mini Calendar */}
         <div className="card">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
-              <Star size={16} className="text-bordeaux" />
-            </div>
-            <h2 className="font-semibold text-chocolat">Saveurs de la semaine</h2>
-          </div>
-
-          {flavors.length === 0 ? (
-            <p className="text-sm text-warmgray-400 text-center py-4">Aucune saveur renseignée</p>
-          ) : (
-            <div className="space-y-1">
-              {flavors.map(([name, count]) => (
-                <div key={name} className="flex items-center justify-between py-1.5 border-b border-rose-50 last:border-0">
-                  <span className="text-sm text-chocolat-light">{name}</span>
-                  <span className="badge bg-rose-100 text-bordeaux">× {count}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Bloc: Suppléments */}
-        <div className="card">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
-              <ShoppingCart size={16} className="text-bordeaux" />
-            </div>
-            <h2 className="font-semibold text-chocolat">Suppléments à prévoir</h2>
-          </div>
-
-          {supplements.length === 0 ? (
-            <p className="text-sm text-warmgray-400 text-center py-4">Aucun supplément cette semaine</p>
-          ) : (
-            <div className="space-y-1">
-              {supplements.map(([name, count]) => (
-                <div key={name} className="flex items-center justify-between py-1.5 border-b border-rose-50 last:border-0">
-                  <span className="text-sm text-chocolat-light">{name}</span>
-                  <span className="badge bg-rose-100 text-bordeaux">× {count}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          <h2 className="font-semibold text-chocolat mb-3 text-sm">Calendrier</h2>
+          <MiniCalendar orders={orders} />
         </div>
       </div>
 
-      {/* Bloc: Retraits / Livraisons du jour */}
-      <div className="card mt-5">
+      {/* Today's Pickups */}
+      <div className="card">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-bordeaux flex items-center justify-center">
-              <Clock size={16} className="text-white" />
+            <div className="w-8 h-8 rounded-lg bg-bordeaux flex items-center justify-center flex-shrink-0">
+              <Clock size={15} className="text-white" />
             </div>
             <h2 className="font-semibold text-chocolat">Retraits & Livraisons du jour</h2>
           </div>
-          <Link to="/commandes" className="btn-secondary text-xs py-1.5 px-3">
-            Toutes les commandes
-          </Link>
+          <Link to="/commandes" className="btn-secondary text-xs py-1.5 px-3">Toutes les commandes</Link>
         </div>
 
         {todayPickups.length === 0 ? (
-          <div className="text-center py-6">
-            <p className="text-warmgray-400 text-sm">Aucun retrait ni livraison aujourd'hui</p>
-          </div>
+          <p className="text-sm text-warmgray-400 text-center py-5">Aucun retrait ni livraison aujourd'hui</p>
         ) : (
-          <div className="space-y-2">
+          <div className="flex flex-wrap gap-3">
             {todayPickups.map(o => (
-              <Link key={o.id} to={`/commandes/${o.id}`}>
-                <div className="flex items-center gap-4 px-4 py-3 rounded-xl bg-rose-50 hover:bg-rose-100 transition-colors group">
-                  <div className="w-16 text-right flex-shrink-0">
-                    <span className="font-bold text-bordeaux text-sm">{o.deliveryTime || '—'}</span>
+              <Link key={o.id} to={`/commandes/${o.id}`} className="flex items-center gap-3 bg-rose-50 hover:bg-rose-100 transition-colors rounded-xl px-4 py-3 min-w-[220px]">
+                <div className="text-center flex-shrink-0">
+                  <div className="text-sm font-bold text-bordeaux">{o.deliveryTime || '—'}</div>
+                </div>
+                <div className="w-px h-8 bg-rose-200" />
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <Cake size={14} className="text-bordeaux" />
                   </div>
-                  <div className="w-px h-8 bg-rose-200" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-chocolat text-sm">{o.clientInstagram || o.clientFirstName}</span>
-                      <span className={`badge text-xs ${o.deliveryMode === 'livraison' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
-                        {o.deliveryMode === 'livraison' ? (
-                          <><MapPin size={10} /> Livraison</>
-                        ) : (
-                          'Retrait'
-                        )}
-                      </span>
+                  <div>
+                    <div className="text-sm font-semibold text-chocolat leading-tight">{o.clientInstagram || o.clientFirstName}</div>
+                    <div className="text-[11px] text-warmgray-400 flex items-center gap-1">
+                      {o.deliveryMode === 'livraison' ? <><MapPin size={9} /> Livraison</> : 'Retrait'}
+                      {' · '}{getProductLabel(o.productType)}
                     </div>
-                    <p className="text-xs text-warmgray-400 mt-0.5 truncate">
-                      {o.productType === 'bento_cake' ? 'Bento Cake' : o.productType === 'layer_cake' ? 'Layer Cake' : o.productType} · {o.productVariant}
-                      {o.shape && o.shape !== 'non_concerne' && ` · ${o.shape === 'coeur' ? 'Cœur' : 'Rond'}`}
-                    </p>
                   </div>
-                  <ChevronRight size={14} className="text-warmgray-400 group-hover:text-bordeaux transition-colors" />
                 </div>
               </Link>
             ))}
