@@ -1,19 +1,20 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, ShoppingBag, PlusCircle, Calendar, Users,
-  BookOpen, Bell, Settings, Link2, LogOut, Cake,
+  LayoutDashboard, ShoppingBag, ChefHat, ShoppingCart,
+  Tag, Users, BookOpen, BarChart2, Settings, Link2, LogOut, Cake,
 } from 'lucide-react'
 import useStore from '../../store'
 
 const NAV_ITEMS = [
-  { to: '/',             label: 'Tableau de bord',  icon: LayoutDashboard, end: true },
-  { to: '/commandes',    label: 'Commandes',         icon: ShoppingBag },
-  { to: '/commandes/nouvelle', label: 'Nouvelle commande', icon: PlusCircle },
-  { to: '/calendrier',  label: 'Calendrier',         icon: Calendar },
-  { to: '/clientes',    label: 'Clientes',           icon: Users },
-  { to: '/catalogue',   label: 'Catalogue',          icon: BookOpen },
-  { to: '/rappels',     label: 'Rappels',            icon: Bell },
-  { to: '/parametres',  label: 'Paramètres',         icon: Settings },
+  { to: '/',              label: 'Tableau de bord', icon: LayoutDashboard, end: true },
+  { to: '/commandes',     label: 'Commandes',        icon: ShoppingBag },
+  { to: '/production',   label: 'Production',        icon: ChefHat },
+  { to: '/courses',      label: 'Courses',           icon: ShoppingCart },
+  { to: '/etiquettes',   label: 'Étiquettes',        icon: Tag },
+  { to: '/clientes',     label: 'Clientes',          icon: Users },
+  { to: '/catalogue',    label: 'Catalogue',         icon: BookOpen },
+  { to: '/statistiques', label: 'Statistiques',      icon: BarChart2 },
+  { to: '/parametres',   label: 'Paramètres',        icon: Settings },
 ]
 
 export default function Sidebar({ onClose }) {
@@ -76,7 +77,7 @@ export default function Sidebar({ onClose }) {
           className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-rose-50 text-bordeaux text-sm font-medium hover:bg-rose-100 transition-colors"
         >
           <Link2 size={15} className="flex-shrink-0" />
-          <span>Lien de commande client</span>
+          <span>Lien formulaire cliente</span>
         </button>
 
         <button
