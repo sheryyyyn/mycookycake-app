@@ -81,11 +81,12 @@ const useStore = create((set, get) => ({
   },
 
   // ── Auth ──────────────────────────────────────────────────────────────────
-  isAuthenticated: false,
+  isAuthenticated: localStorage.getItem('mcc_auth') === '1',
 
   login(password) {
     const { settings } = get()
     if (password === settings.adminPassword) {
+      localStorage.setItem('mcc_auth', '1')
       set({ isAuthenticated: true })
       return true
     }
@@ -93,6 +94,7 @@ const useStore = create((set, get) => ({
   },
 
   logout() {
+    localStorage.removeItem('mcc_auth')
     set({ isAuthenticated: false })
   },
 
