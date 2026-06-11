@@ -80,7 +80,15 @@ export default function Dashboard() {
   const orders = useStore(s => s.orders)
   const clients = useStore(s => s.clients)
 
-  const activeOrders = orders.filter(o => o.status !== 'annulee')
+  const today = startOfDay(new Date())
+  const activeOrders = orders.filter(o => {
+    if (o.status === 'annulee') return false
+    if (o.status === 'nouvelle' || o.status === 'confirmee') {
+      if (!o.deliveryDate) return true
+      return parseISO(o.deliveryDate) >= today
+    }
+    return true
+  })
   const totalCollected = activeOrders.reduce((s, o) => s + (Number(o.amountPaid) || 0), 0)
   const upcomingPickups = getUpcomingOrders(orders)
   const todayPickups = getTodayPickups(orders)
