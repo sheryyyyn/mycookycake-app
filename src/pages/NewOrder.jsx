@@ -72,12 +72,13 @@ function DateButton({ value, onChange }) {
           {formatted ?? 'Choisir une date'}
         </span>
       </div>
-      {/* Input natif invisible par-dessus, reçoit les clics */}
+      {/* Input natif par-dessus, opacity quasi-nulle mais interactive sur iOS */}
       <input
         type="date"
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        style={{ opacity: 0.01 }}
+        className="absolute inset-0 w-full h-full cursor-pointer"
       />
     </div>
   )
