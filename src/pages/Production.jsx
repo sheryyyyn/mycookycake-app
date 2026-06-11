@@ -254,7 +254,10 @@ function GenoisesView() {
                     {r.sizeLabel && (
                       <span className="text-sm font-bold text-bordeaux bg-rose-50 px-2 py-0.5 rounded-full">{r.sizeLabel}</span>
                     )}
-                    <span className="text-sm font-semibold text-chocolat bg-beige px-2 py-0.5 rounded-full">{r.shapeLabel}</span>
+                    <span className={`flex items-center gap-1 text-sm font-semibold px-2 py-0.5 rounded-full ${r.shapeLabel === 'Cœur' ? 'bg-rose-100 text-rose-600' : 'bg-gray-100 text-gray-600'}`}>
+                      {r.shapeLabel === 'Cœur' ? <Heart size={12} fill="currentColor" /> : <Circle size={12} />}
+                      {r.shapeLabel}
+                    </span>
                     <span className="text-xs text-warmgray-400">({r.slicesEach} × {r.count})</span>
                   </div>
                   <span className="font-bold text-chocolat ml-3 flex-shrink-0">{r.total} tranches</span>
