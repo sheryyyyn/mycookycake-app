@@ -23,6 +23,7 @@ function getProductionStatus(order) {
 
 function KanbanCard({ order, onDragStart }) {
   const shape = order.shape
+  const isLayerCup = order.productType === 'layer_cup'
   return (
     <div
       draggable
@@ -39,10 +40,16 @@ function KanbanCard({ order, onDragStart }) {
         <p className="font-semibold text-bordeaux text-sm">{order.clientInstagram || order.clientFirstName}</p>
 
         <div className="flex items-center gap-1 text-xs text-chocolat-light">
-          {shape === 'coeur'
-            ? <Heart size={11} className="text-rose-400" />
-            : <Square size={11} className="text-warmgray-400" />}
-          <span>{shape === 'coeur' ? 'Cœur' : 'Rond'}</span>
+          {!isLayerCup && (
+            <>
+              {shape === 'coeur'
+                ? <Heart size={11} className="text-rose-400" />
+                : <Circle size={11} className="text-warmgray-400" />}
+              <span>{shape === 'coeur' ? 'Cœur' : 'Rond'}</span>
+              {order.productVariant && <span>·</span>}
+            </>
+          )}
+          <span className="font-medium">{getProductLabel(order.productType)}</span>
           {order.productVariant && <span>· {order.productVariant}</span>}
         </div>
 
