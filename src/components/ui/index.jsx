@@ -226,34 +226,36 @@ function readFileAsDataUrl(file) {
 }
 
 export function PhotoGallery({ photos = [], onDelete, onAdd }) {
-  const zoneRef = useRef(null)
   const [pasted, setPasted] = useState(false)
+  const [pasteError, setPasteError] = useState(false)
 
-  useEffect(() => {
-    if (!onAdd) return
-
-    async function handlePaste(e) {
-      const items = Array.from(e.clipboardData?.items || [])
-      const imageItems = items.filter(item => item.type.startsWith('image/'))
-      if (!imageItems.length) return
-      e.preventDefault()
-      for (const item of imageItems) {
-        const file = item.getAsFile()
-        if (!file) continue
-        const dataUrl = await readFileAsDataUrl(file)
-        // call onAdd with a synthetic event-like object
-        onAdd({ target: { files: [file] }, _dataUrl: dataUrl })
+  async function handlePasteClick() {
+    try {
+      const clipItems = await navigator.clipboard.read()
+      let found = false
+      for (const item of clipItems) {
+        const imageType = item.types.find(t => t.startsWith('image/'))
+        if (!imageType) continue
+        const blob = await item.getType(imageType)
+        const dataUrl = await readFileAsDataUrl(blob)
+        onAdd({ _dataUrl: dataUrl })
+        found = true
       }
-      setPasted(true)
-      setTimeout(() => setPasted(false), 1500)
+      if (found) {
+        setPasted(true)
+        setTimeout(() => setPasted(false), 1800)
+      } else {
+        setPasteError(true)
+        setTimeout(() => setPasteError(false), 2000)
+      }
+    } catch {
+      setPasteError(true)
+      setTimeout(() => setPasteError(false), 2000)
     }
-
-    window.addEventListener('paste', handlePaste)
-    return () => window.removeEventListener('paste', handlePaste)
-  }, [onAdd])
+  }
 
   return (
-    <div ref={zoneRef}>
+    <div>
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
         {photos.map((src, i) => (
           <div key={i} className="relative group aspect-square">
@@ -274,29 +276,31 @@ export function PhotoGallery({ photos = [], onDelete, onAdd }) {
           </div>
         ))}
         {onAdd && (
-          <label className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors ${
-            pasted ? 'border-green-400 bg-green-50' : 'border-beige hover:border-rose-300 hover:bg-rose-50'
-          }`}>
+          <label className="aspect-square rounded-xl border-2 border-dashed border-beige flex flex-col items-center justify-center cursor-pointer hover:border-rose-300 hover:bg-rose-50 transition-colors">
             <span className="text-2xl text-warmgray-400">+</span>
-            <span className="text-xs text-warmgray-400 text-center px-1 leading-tight">
-              {pasted ? '✓ Collé !' : 'Ajouter'}
-            </span>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={onAdd}
-            />
+            <span className="text-xs text-warmgray-400">Fichier</span>
+            <input type="file" accept="image/*" multiple className="hidden" onChange={onAdd} />
           </label>
         )}
       </div>
+
       {onAdd && (
-        <p className="text-xs text-warmgray-400 mt-2 flex items-center gap-1">
-          <ClipboardPaste size={12} />
-          Vous pouvez aussi coller une image avec Ctrl+V / ⌘+V
-        </p>
+        <button
+          type="button"
+          onClick={handlePasteClick}
+          className={`mt-3 flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all ${
+            pasted
+              ? 'bg-green-50 border-green-300 text-green-700'
+              : pasteError
+              ? 'bg-red-50 border-red-300 text-red-600'
+              : 'bg-rose-50 border-rose-200 text-bordeaux hover:bg-rose-100'
+          }`}
+        >
+          <ClipboardPaste size={15} />
+          {pasted ? '✓ Image collée !' : pasteError ? 'Aucune image dans le presse-papier' : 'Coller une image (Ctrl+V)'}
+        </button>
       )}
+
       {photos.length === 0 && !onAdd && (
         <p className="text-sm text-warmgray-400 italic">Aucune photo d'inspiration</p>
       )}
