@@ -79,7 +79,7 @@ export default function Etiquettes() {
         }
       `}</style>
 
-      <div className="p-6 max-w-4xl mx-auto print:hidden">
+      <div className="p-3 sm:p-6 max-w-4xl mx-auto print:hidden">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 gap-4">
           <div>
