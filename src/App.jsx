@@ -8,13 +8,15 @@ import Dashboard from './pages/Dashboard'
 import Orders from './pages/Orders'
 import NewOrder from './pages/NewOrder'
 import OrderDetail from './pages/OrderDetail'
-import Calendar from './pages/Calendar'
 import Clients from './pages/Clients'
 import ClientDetail from './pages/ClientDetail'
 import Catalog from './pages/Catalog'
-import Reminders from './pages/Reminders'
 import Settings from './pages/Settings'
 import ClientForm from './pages/ClientForm'
+import Production from './pages/Production'
+import Courses from './pages/Courses'
+import Etiquettes from './pages/Etiquettes'
+import Statistiques from './pages/Statistiques'
 
 function RequireAuth({ children }) {
   const isAuthenticated = useStore(s => s.isAuthenticated)
@@ -46,11 +48,13 @@ export default function App() {
                 <Route path="/commandes" element={<Orders />} />
                 <Route path="/commandes/nouvelle" element={<NewOrder />} />
                 <Route path="/commandes/:id" element={<OrderDetail />} />
-                <Route path="/calendrier" element={<Calendar />} />
+                <Route path="/production" element={<Production />} />
+                <Route path="/courses" element={<Courses />} />
+                <Route path="/etiquettes" element={<Etiquettes />} />
                 <Route path="/clientes" element={<Clients />} />
                 <Route path="/clientes/:id" element={<ClientDetail />} />
                 <Route path="/catalogue" element={<Catalog />} />
-                <Route path="/rappels" element={<Reminders />} />
+                <Route path="/statistiques" element={<Statistiques />} />
                 <Route path="/parametres" element={<Settings />} />
               </Routes>
             </Layout>
