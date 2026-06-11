@@ -166,22 +166,49 @@ export function aggregateProduction(orders) {
   return { bentoByVariantShape, layerByVariantShape, cupcakesQty, layerCupQty }
 }
 
-// Aggregate genoise counts for a list of orders
+// Aggregate genoise counts grouped by (type, variant, shape)
+// Returns { rows: [{ label, slicesEach, count, total }], total }
 export function aggregateGenoises(orders) {
-  let bento = 0, layer10 = 0, layer15 = 0, layer2025 = 0, layer3035 = 0
+  const map = {} // key → { label, slicesEach, count }
+
   for (const o of orders) {
+    let slicesEach = 0
+    let sizeLabel = ''
+
     if (o.productType === 'bento_cake') {
-      bento += 2
+      slicesEach = 2
+      sizeLabel = o.productVariant ? o.productVariant : ''
     } else if (o.productType === 'layer_cake') {
       const v = o.productVariant || ''
-      if (v.includes('10')) layer10 += 3
-      else if (v.includes('15')) layer15 += 4
-      else if (v.includes('20') || v.includes('25')) layer2025 += 5
-      else if (v.includes('30') || v.includes('35')) layer3035 += 5
+      if (v.includes('10'))       { slicesEach = 3; sizeLabel = '10 parts' }
+      else if (v.includes('15'))  { slicesEach = 4; sizeLabel = '15 parts' }
+      else if (v.includes('20') || v.includes('25')) { slicesEach = 5; sizeLabel = '20-25 parts' }
+      else if (v.includes('30') || v.includes('35')) { slicesEach = 5; sizeLabel = '30-35 parts' }
+      else { slicesEach = 0 }
     }
+
+    if (slicesEach === 0) continue
+
+    const shapeRaw = o.shape || 'rond'
+    const shapeLabel = shapeRaw === 'coeur' ? 'Cœur' : 'Rond'
+    const typeLabel = o.productType === 'bento_cake' ? 'Bento Cake' : 'Layer Cake'
+
+    const parts = [typeLabel]
+    if (sizeLabel) parts.push(sizeLabel)
+    parts.push(shapeLabel)
+    const label = parts.join(' · ')
+
+    const key = `${o.productType}|${sizeLabel}|${shapeRaw}`
+    if (!map[key]) map[key] = { label, slicesEach, count: 0 }
+    map[key].count += 1
   }
-  const total = bento + layer10 + layer15 + layer2025 + layer3035
-  return { bento, layer10, layer15, layer2025, layer3035, total }
+
+  const rows = Object.values(map)
+    .map(r => ({ ...r, total: r.slicesEach * r.count }))
+    .sort((a, b) => a.label.localeCompare(b.label))
+
+  const total = rows.reduce((s, r) => s + r.total, 0)
+  return { rows, total }
 }
 
 // Aggregate flavors from orders
