@@ -89,15 +89,18 @@ export default function Orders() {
           >
             Toutes ({orders.length})
           </button>
-          {STATUSES.map(s => {
-            const count = orders.filter(o => o.status === s).length
+          {[
+            { value: 'nouvelle', label: 'À confirmer' },
+            { value: 'confirmee', label: 'Confirmée' },
+          ].map(({ value, label }) => {
+            const count = orders.filter(o => o.status === value).length
             return (
               <button
-                key={s}
-                onClick={() => setFilterStatus(s)}
-                className={`text-xs px-3 py-1 rounded-full border transition-colors ${filterStatus === s ? 'bg-bordeaux text-white border-bordeaux' : 'border-beige text-warmgray-500 hover:border-bordeaux hover:text-bordeaux'}`}
+                key={value}
+                onClick={() => setFilterStatus(value)}
+                className={`text-xs px-3 py-1 rounded-full border transition-colors ${filterStatus === value ? 'bg-bordeaux text-white border-bordeaux' : 'border-beige text-warmgray-500 hover:border-bordeaux hover:text-bordeaux'}`}
               >
-                {getStatusLabel(s)} ({count})
+                {label} ({count})
               </button>
             )
           })}
