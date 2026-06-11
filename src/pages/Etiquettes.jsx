@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Printer, Heart, Square, Clock, MapPin, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Printer, Heart, Circle, Clock, MapPin, ChevronLeft, ChevronRight } from 'lucide-react'
 import useStore from '../store'
 import { parseISO, format, startOfWeek, addDays, isSameDay, addWeeks, subWeeks } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -17,6 +17,7 @@ const DAY_BG = {
 function EtiquetteLabel({ order }) {
   const dayOfWeek = order.deliveryDate ? parseISO(order.deliveryDate).getDay() : -1
   const bg = DAY_BG[dayOfWeek] || 'bg-white'
+  const isLayerCup = order.productType === 'layer_cup'
 
   return (
     <div className={`${bg} border border-gray-300 rounded-lg p-2.5 flex flex-col gap-1.5 text-[11px] leading-snug break-inside-avoid`}>
@@ -27,9 +28,14 @@ function EtiquetteLabel({ order }) {
         <div className="flex-1 min-w-0">
           <p className="font-bold text-bordeaux text-sm truncate">{order.clientInstagram || order.clientFirstName}</p>
           <div className="flex items-center gap-1 text-gray-600 mt-0.5">
-            {order.shape === 'coeur' ? <Heart size={9} /> : <Square size={9} />}
-            <span>{order.shape === 'coeur' ? 'Cœur' : order.shape === 'rond' ? 'Rond' : ''}</span>
-            {order.productVariant && <span>· {order.productVariant}</span>}
+            {!isLayerCup && (
+              <>
+                {order.shape === 'coeur' ? <Heart size={9} /> : <Circle size={9} />}
+                <span>{order.shape === 'coeur' ? 'Cœur' : order.shape === 'rond' ? 'Rond' : ''}</span>
+                {order.productVariant && <span>·</span>}
+              </>
+            )}
+            {order.productVariant && <span>{order.productVariant}</span>}
           </div>
           {order.colors && <p className="text-gray-500 truncate mt-0.5">Couv : {order.colors}</p>}
         </div>
@@ -49,7 +55,7 @@ function EtiquetteLabel({ order }) {
 export default function Etiquettes() {
   const orders = useStore(s => s.orders)
   const [weekOffset, setWeekOffset] = useState(0)
-  const [selectedDay, setSelectedDay] = useState(null)
+  const [selectedDays, setSelectedDays] = useState([])
 
   const baseWeek = addWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), weekOffset)
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(baseWeek, i))
@@ -62,7 +68,16 @@ export default function Etiquettes() {
       .sort((a, b) => (a.deliveryTime || '').localeCompare(b.deliveryTime || ''))
   }
 
-  const labelOrders = selectedDay ? ordersForDay(selectedDay) : []
+  function toggleDay(day) {
+    setSelectedDays(prev => {
+      const exists = prev.some(d => isSameDay(d, day))
+      return exists ? prev.filter(d => !isSameDay(d, day)) : [...prev, day]
+    })
+  }
+
+  const labelOrders = selectedDays
+    .sort((a, b) => a - b)
+    .flatMap(day => ordersForDay(day))
 
   function handlePrint() {
     window.print()
@@ -70,21 +85,25 @@ export default function Etiquettes() {
 
   return (
     <>
-      {/* Print styles */}
+      {/* Print styles — on cache uniquement .etiquettes-screen, pas tout body */}
       <style>{`
         @media print {
-          body > * { display: none !important; }
-          #etiquettes-print { display: grid !important; }
-          #etiquettes-print { grid-template-columns: repeat(3, 1fr); gap: 6mm; padding: 10mm; }
+          .etiquettes-screen { display: none !important; }
+          .etiquettes-print  { display: grid !important; grid-template-columns: repeat(3, 1fr); gap: 6mm; padding: 10mm; }
         }
+        .etiquettes-print { display: none; }
       `}</style>
 
-      <div className="p-3 sm:p-6 max-w-4xl mx-auto print:hidden">
+      <div className="etiquettes-screen p-3 sm:p-6 max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 gap-4">
           <div>
             <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-chocolat">Étiquettes</h1>
-            <p className="text-sm text-warmgray-400 mt-0.5">Sélectionnez un jour pour afficher les étiquettes</p>
+            <p className="text-sm text-warmgray-400 mt-0.5">
+              {selectedDays.length === 0
+                ? 'Sélectionnez un ou plusieurs jours'
+                : `${selectedDays.length} jour${selectedDays.length > 1 ? 's' : ''} sélectionné${selectedDays.length > 1 ? 's' : ''} · ${labelOrders.length} étiquette${labelOrders.length > 1 ? 's' : ''}`}
+            </p>
           </div>
           <button
             onClick={handlePrint}
@@ -114,12 +133,12 @@ export default function Etiquettes() {
           <div className="grid grid-cols-7 gap-2">
             {weekDays.map(day => {
               const count = ordersForDay(day).length
-              const isSelected = selectedDay && isSameDay(day, selectedDay)
-              const isToday = isSameDay(day, new Date())
+              const isSelected = selectedDays.some(d => isSameDay(d, day))
+              const isTodayDay = isSameDay(day, new Date())
               return (
                 <button
                   key={day.toISOString()}
-                  onClick={() => setSelectedDay(isSelected ? null : day)}
+                  onClick={() => count > 0 && toggleDay(day)}
                   className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition-all ${
                     isSelected
                       ? 'bg-bordeaux border-bordeaux text-white'
@@ -129,10 +148,10 @@ export default function Etiquettes() {
                   }`}
                   disabled={count === 0}
                 >
-                  <span className={`text-xs font-semibold uppercase tracking-wide ${isSelected ? 'text-white/70' : isToday ? 'text-bordeaux' : ''}`}>
+                  <span className={`text-xs font-semibold uppercase tracking-wide ${isSelected ? 'text-white/70' : isTodayDay ? 'text-bordeaux' : ''}`}>
                     {format(day, 'EEE', { locale: fr })}
                   </span>
-                  <span className={`text-lg font-bold leading-none ${isToday && !isSelected ? 'text-bordeaux' : ''}`}>
+                  <span className={`text-lg font-bold leading-none ${isTodayDay && !isSelected ? 'text-bordeaux' : ''}`}>
                     {format(day, 'd')}
                   </span>
                   {count > 0 && (
@@ -149,14 +168,14 @@ export default function Etiquettes() {
         </div>
 
         {/* Labels preview */}
-        {selectedDay && (
+        {selectedDays.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-warmgray-400 uppercase tracking-widest mb-3 capitalize">
-              {format(selectedDay, 'EEEE d MMMM', { locale: fr })} · {labelOrders.length} étiquette{labelOrders.length > 1 ? 's' : ''}
+            <p className="text-xs font-semibold text-warmgray-400 uppercase tracking-widest mb-3">
+              Aperçu · {labelOrders.length} étiquette{labelOrders.length > 1 ? 's' : ''}
             </p>
             {labelOrders.length === 0 ? (
               <div className="card text-center py-10">
-                <p className="text-warmgray-400 text-sm">Aucune commande ce jour</p>
+                <p className="text-warmgray-400 text-sm">Aucune commande ces jours</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -168,15 +187,15 @@ export default function Etiquettes() {
           </div>
         )}
 
-        {!selectedDay && (
+        {selectedDays.length === 0 && (
           <div className="card text-center py-12 text-warmgray-400">
-            <p className="text-sm">Cliquez sur un jour pour afficher les étiquettes</p>
+            <p className="text-sm">Cliquez sur un ou plusieurs jours pour afficher les étiquettes</p>
           </div>
         )}
       </div>
 
-      {/* Print zone */}
-      <div id="etiquettes-print" className="hidden">
+      {/* Zone d'impression — toujours dans le DOM, visible uniquement à l'impression */}
+      <div className="etiquettes-print">
         {labelOrders.map(o => (
           <EtiquetteLabel key={o.id} order={o} />
         ))}
