@@ -190,8 +190,8 @@ export default function NewOrder() {
         <Card>
           <h2 className="font-semibold text-chocolat mb-3">Cliente</h2>
           <div className="grid sm:grid-cols-2 gap-3">
-            <Field k="clientInstagram" label="Instagram" required placeholder="@pseudo" />
-            <Field k="clientEmail" label="Email" type="email" placeholder="(optionnel)" />
+            <Field form={form} errors={errors} onChange={set} k="clientInstagram" label="Instagram" required placeholder="@pseudo" />
+            <Field form={form} errors={errors} onChange={set} k="clientEmail" label="Email" type="email" placeholder="(optionnel)" />
           </div>
         </Card>
 
@@ -246,12 +246,12 @@ export default function NewOrder() {
           <div className="grid sm:grid-cols-2 gap-3 mb-3">
             {isPieceMontee ? (
               <>
-                <FlavorSelect k="flavorBottom" label="Saveur étage bas" />
-                <FlavorSelect k="flavorTop" label="Saveur étage haut" />
+                <FlavorSelect form={form} onChange={set} activeFlavors={activeFlavors} k="flavorBottom" label="Saveur étage bas" />
+                <FlavorSelect form={form} onChange={set} activeFlavors={activeFlavors} k="flavorTop" label="Saveur étage haut" />
               </>
             ) : (
               <div className="sm:col-span-2">
-                <FlavorSelect k="flavorMain" label="Saveur" />
+                <FlavorSelect form={form} onChange={set} activeFlavors={activeFlavors} k="flavorMain" label="Saveur" />
               </div>
             )}
           </div>
@@ -285,9 +285,9 @@ export default function NewOrder() {
         <Card>
           <h2 className="font-semibold text-chocolat mb-3">Personnalisation</h2>
           <div className="space-y-3">
-            <Field k="colors" label="Couleur de couverture" placeholder="Ex: rose poudré, blanc, or..." />
-            <Field k="messageOnCake" label="Message sur le gâteau" />
-            <Field k="allergies" label="Allergies / restrictions" />
+            <Field form={form} errors={errors} onChange={set} k="colors" label="Couleur de couverture" placeholder="Ex: rose poudré, blanc, or..." />
+            <Field form={form} errors={errors} onChange={set} k="messageOnCake" label="Message sur le gâteau" />
+            <Field form={form} errors={errors} onChange={set} k="allergies" label="Allergies / restrictions" />
           </div>
         </Card>
 
@@ -310,7 +310,7 @@ export default function NewOrder() {
               <DateButton value={form.deliveryDate} onChange={v => set('deliveryDate', v)} />
               {errors.deliveryDate && <p className="text-xs text-red-500">{errors.deliveryDate}</p>}
             </div>
-            <Field k="deliveryTime" label="Heure" type="time" placeholder="(optionnel)" />
+            <Field form={form} errors={errors} onChange={set} k="deliveryTime" label="Heure" type="time" placeholder="(optionnel)" />
             <div className="space-y-1 sm:col-span-2">
               <label className="form-label">Mode</label>
               <div className="flex gap-4">
@@ -324,9 +324,9 @@ export default function NewOrder() {
             </div>
             {form.deliveryMode === 'livraison' && (
               <>
-                <Field k="deliveryAddress" label="Adresse" className="sm:col-span-2" />
-                <Field k="deliveryZip" label="Code postal" />
-                <Field k="deliveryCity" label="Ville" />
+                <Field form={form} errors={errors} onChange={set} k="deliveryAddress" label="Adresse" className="sm:col-span-2" />
+                <Field form={form} errors={errors} onChange={set} k="deliveryZip" label="Code postal" />
+                <Field form={form} errors={errors} onChange={set} k="deliveryCity" label="Ville" />
               </>
             )}
           </div>
@@ -336,8 +336,8 @@ export default function NewOrder() {
         <Card>
           <h2 className="font-semibold text-chocolat mb-3">Paiement</h2>
           <div className="grid sm:grid-cols-2 gap-3">
-            <Field k="amountTotal" label="Montant total (€)" type="number" step="0.5" />
-            <Field k="amountPaid" label="Montant payé (€)" type="number" step="0.5" />
+            <Field form={form} errors={errors} onChange={set} k="amountTotal" label="Montant total (€)" type="number" step="0.5" />
+            <Field form={form} errors={errors} onChange={set} k="amountPaid" label="Montant payé (€)" type="number" step="0.5" />
           </div>
           <div className="space-y-1 mt-3">
             <label className="form-label">Notes internes</label>
