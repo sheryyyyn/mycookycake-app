@@ -308,14 +308,14 @@ function FourrageView() {
 
   return (
     <div className="max-w-full">
-      <h2 className="font-semibold text-chocolat mb-4">Fourrages à préparer — semaine en cours</h2>
+      <h2 className="font-semibold text-chocolat mb-3">Fourrages à préparer — semaine en cours</h2>
       {sorted.length === 0 ? (
         <div className="card text-center py-10">
           <p className="text-warmgray-400 text-sm">Aucun fourrage à préparer cette semaine</p>
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap gap-3 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-3">
             {sorted.map(([flavor, flavorOrders]) => {
               const detailCounts = {}
               for (const o of flavorOrders) {
@@ -326,20 +326,20 @@ function FourrageView() {
                 (a, b) => detailSortKey(a[0]) - detailSortKey(b[0])
               )
               return (
-                <div key={flavor} className="bg-white rounded-2xl border border-rose-100 shadow-card overflow-hidden min-w-[170px]">
-                  {/* header coloré */}
-                  <div className="bg-rose-50 px-4 py-3 flex items-center justify-between gap-3">
-                    <span className="text-xs font-bold text-chocolat uppercase tracking-wide leading-tight">{flavor}</span>
-                    <span className="text-3xl font-bold text-bordeaux leading-none flex-shrink-0">{flavorOrders.length}</span>
+                <div key={flavor} className="bg-white rounded-xl border border-rose-100 shadow-card overflow-hidden">
+                  {/* header */}
+                  <div className="bg-rose-50 px-3 py-2 flex items-center justify-between gap-2 border-b border-rose-100">
+                    <span className="text-[11px] font-bold text-chocolat uppercase tracking-wide leading-tight">{flavor}</span>
+                    <span className="text-2xl font-bold text-bordeaux leading-none flex-shrink-0">{flavorOrders.length}</span>
                   </div>
                   {/* détails */}
-                  <div className="px-4 py-3 space-y-2">
+                  <div className="px-3 py-2 divide-y divide-rose-50">
                     {detailEntries.map(([label, count]) => (
-                      <div key={label} className="flex items-center justify-between gap-4">
-                        <span className="text-sm text-chocolat-light">{label}</span>
-                        {count > 1 && (
-                          <span className="text-sm font-bold text-bordeaux flex-shrink-0">× {count}</span>
-                        )}
+                      <div key={label} className="flex items-center justify-between gap-2 py-1 first:pt-0 last:pb-0">
+                        <span className="text-xs text-chocolat-light leading-tight">{label}</span>
+                        <span className="text-xs font-bold text-bordeaux flex-shrink-0 ml-1">
+                          {count > 1 ? `× ${count}` : '× 1'}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -347,9 +347,9 @@ function FourrageView() {
               )
             })}
           </div>
-          <div className="card flex items-center justify-between max-w-sm">
-            <span className="font-bold text-chocolat">Total fourrages</span>
-            <span className="text-2xl font-bold text-bordeaux">{total}</span>
+          <div className="inline-flex items-center gap-4 bg-white rounded-xl border border-rose-100 shadow-card px-4 py-2">
+            <span className="font-bold text-chocolat text-sm">Total fourrages</span>
+            <span className="text-xl font-bold text-bordeaux">{total}</span>
           </div>
         </>
       )}
