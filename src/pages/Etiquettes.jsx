@@ -200,8 +200,8 @@ export default function Etiquettes() {
 
       {/* Zone d'impression — toujours dans le DOM, visible uniquement à l'impression */}
       <div className="etiquettes-print">
-        {labelOrders.map(o => (
-          <EtiquetteLabel key={o.id} order={o} />
+        {labelOrders.map(({ order: o, colorIndex }) => (
+          <EtiquetteLabel key={o.id} order={o} colorIndex={colorIndex} />
         ))}
       </div>
     </>
