@@ -203,7 +203,7 @@ export function aggregateGenoises(orders) {
 
     const qty = o.productType === 'layer_cup' ? (Number(o.quantity) || 1) : 1
     const key = `${o.productType}|${sizeLabel}|${shapeRaw}`
-    if (!map[key]) map[key] = { label, slicesEach, count: 0 }
+    if (!map[key]) map[key] = { label, typeLabel, sizeLabel, shapeLabel, slicesEach, count: 0 }
     map[key].count += qty
   }
 
