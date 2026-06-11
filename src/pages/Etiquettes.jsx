@@ -134,15 +134,18 @@ export default function Etiquettes() {
           <div className="grid grid-cols-7 gap-2">
             {weekDays.map(day => {
               const count = ordersForDay(day).length
-              const isSelected = selectedDays.some(d => isSameDay(d, day))
+              const selectedIdx = sortedSelectedDays.findIndex(d => isSameDay(d, day))
+              const isSelected = selectedIdx !== -1
               const isTodayDay = isSameDay(day, new Date())
+              const dayColor = isSelected ? DAY_COLORS[selectedIdx % DAY_COLORS.length] : null
               return (
                 <button
                   key={day.toISOString()}
                   onClick={() => count > 0 && toggleDay(day)}
+                  style={isSelected && dayColor.bg !== '#fff' ? { backgroundColor: dayColor.bg, borderColor: dayColor.border } : {}}
                   className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition-all ${
                     isSelected
-                      ? 'bg-bordeaux border-bordeaux text-white'
+                      ? dayColor.bg === '#fff' ? 'bg-white border-gray-400 text-chocolat' : 'text-chocolat'
                       : count > 0
                       ? 'bg-rose-50 border-rose-200 text-chocolat hover:border-bordeaux'
                       : 'bg-white border-beige text-warmgray-400 cursor-default'
