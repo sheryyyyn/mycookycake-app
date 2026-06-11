@@ -178,6 +178,9 @@ export function aggregateGenoises(orders) {
     if (o.productType === 'bento_cake') {
       slicesEach = 2
       sizeLabel = o.productVariant ? o.productVariant : ''
+    } else if (o.productType === 'layer_cup') {
+      slicesEach = 2
+      sizeLabel = ''
     } else if (o.productType === 'layer_cake') {
       const v = o.productVariant || ''
       if (v.includes('10'))       { slicesEach = 3; sizeLabel = '10 parts' }
