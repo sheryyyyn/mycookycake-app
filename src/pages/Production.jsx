@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ChefHat, Layers, CalendarDays, Heart, Circle, Clock, MapPin,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, Utensils,
 } from 'lucide-react'
 import useStore from '../store'
 import { format, parseISO, startOfDay, addDays, startOfWeek, addWeeks, isSameDay } from 'date-fns'
