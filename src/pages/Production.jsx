@@ -249,11 +249,15 @@ function GenoisesView() {
             <div className="space-y-0">
               {rows.map(r => (
                 <div key={r.label} className="flex items-center justify-between py-2.5 border-b border-rose-50 last:border-0">
-                  <div>
-                    <span className="text-sm text-chocolat-light">{r.label}</span>
-                    <span className="text-xs text-warmgray-400 ml-2">({r.slicesEach} tranches × {r.count})</span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-sm text-chocolat-light">{r.typeLabel}</span>
+                    {r.sizeLabel && (
+                      <span className="text-sm font-bold text-bordeaux bg-rose-50 px-2 py-0.5 rounded-full">{r.sizeLabel}</span>
+                    )}
+                    <span className="text-sm font-semibold text-chocolat bg-beige px-2 py-0.5 rounded-full">{r.shapeLabel}</span>
+                    <span className="text-xs text-warmgray-400">({r.slicesEach} × {r.count})</span>
                   </div>
-                  <span className="font-bold text-chocolat">{r.total} tranches</span>
+                  <span className="font-bold text-chocolat ml-3 flex-shrink-0">{r.total} tranches</span>
                 </div>
               ))}
             </div>
