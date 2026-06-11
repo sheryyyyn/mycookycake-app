@@ -119,13 +119,12 @@ function WeekDayPicker({ orders, selectedDay, onSelect }) {
             <button
               key={day.toISOString()}
               onClick={() => onSelect(isSelected ? null : day)}
-              disabled={count === 0}
               className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 transition-all ${
                 isSelected
                   ? 'bg-bordeaux border-bordeaux text-white'
                   : count > 0
-                  ? 'bg-rose-50 border-rose-200 text-chocolat hover:border-bordeaux cursor-pointer'
-                  : 'bg-white border-beige text-warmgray-400 cursor-default opacity-50'
+                  ? 'bg-rose-50 border-rose-200 text-chocolat hover:border-bordeaux'
+                  : 'bg-white border-beige text-warmgray-400 hover:border-rose-200 hover:text-chocolat'
               }`}
             >
               <span className={`text-[10px] font-semibold uppercase tracking-wide ${
