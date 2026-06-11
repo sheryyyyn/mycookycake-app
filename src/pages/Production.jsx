@@ -281,12 +281,18 @@ function getOrderDetailLabel(o) {
   return `${type}${variant}`
 }
 
+// extract numeric parts value for sorting bento sizes (2 parts → 2, 6 parts → 6, layer cup → 9999)
+function detailSortKey(label) {
+  if (/layer cup/i.test(label)) return 9999
+  const m = label.match(/(\d+)/)
+  return m ? parseInt(m[1]) : 0
+}
+
 function FourrageView() {
   const orders = useStore(s => s.orders)
   const weekOrders = getWeekOrders(orders)
   const activeOrders = weekOrders.filter(o => o.status !== 'annulee')
 
-  // group orders by flavor, each order can appear under main and secondary
   const byFlavor = {}
   for (const o of activeOrders) {
     for (const f of [o.flavorMain, o.flavorSecondary].filter(Boolean)) {
@@ -309,23 +315,30 @@ function FourrageView() {
         <>
           <div className="flex flex-wrap gap-3 mb-4">
             {sorted.map(([flavor, flavorOrders]) => {
-              // aggregate detail lines with counts
               const detailCounts = {}
               for (const o of flavorOrders) {
                 const label = getOrderDetailLabel(o)
                 detailCounts[label] = (detailCounts[label] || 0) + 1
               }
+              const detailEntries = Object.entries(detailCounts).sort(
+                (a, b) => detailSortKey(a[0]) - detailSortKey(b[0])
+              )
               return (
-                <div key={flavor} className="card flex flex-col gap-3 min-w-[160px]">
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-4xl font-bold text-bordeaux">{flavorOrders.length}</span>
-                    <span className="text-xs font-bold text-chocolat uppercase tracking-wide text-center">{flavor}</span>
+                <div key={flavor} className="bg-white rounded-2xl border border-rose-100 shadow-card overflow-hidden min-w-[170px]">
+                  {/* header coloré */}
+                  <div className="bg-rose-50 px-4 py-3 flex items-center justify-between gap-3">
+                    <span className="text-xs font-bold text-chocolat uppercase tracking-wide leading-tight">{flavor}</span>
+                    <span className="text-3xl font-bold text-bordeaux leading-none flex-shrink-0">{flavorOrders.length}</span>
                   </div>
-                  <div className="border-t border-rose-50 pt-2 space-y-1">
-                    {Object.entries(detailCounts).map(([label, count]) => (
-                      <p key={label} className="text-xs text-chocolat-light text-center">
-                        {label}{count > 1 ? <span className="font-semibold text-bordeaux"> × {count}</span> : ''}
-                      </p>
+                  {/* détails */}
+                  <div className="px-4 py-3 space-y-2">
+                    {detailEntries.map(([label, count]) => (
+                      <div key={label} className="flex items-center justify-between gap-4">
+                        <span className="text-sm text-chocolat-light">{label}</span>
+                        {count > 1 && (
+                          <span className="text-sm font-bold text-bordeaux flex-shrink-0">× {count}</span>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
