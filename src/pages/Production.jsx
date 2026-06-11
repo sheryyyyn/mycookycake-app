@@ -382,13 +382,14 @@ function PlanningView() {
 }
 
 const TABS = [
-  { id: 'kanban',    label: 'Kanban',   icon: ChefHat },
-  { id: 'genoises',  label: 'Génoises', icon: Layers },
-  { id: 'planning',  label: 'Planning', icon: CalendarDays },
+  { id: 'genoises',  label: 'Génoises',  icon: Layers },
+  { id: 'fourrage',  label: 'Fourrage',  icon: Utensils },
+  { id: 'kanban',    label: 'Kanban',    icon: ChefHat },
+  { id: 'planning',  label: 'Planning',  icon: CalendarDays },
 ]
 
 export default function Production() {
-  const [tab, setTab] = useState('kanban')
+  const [tab, setTab] = useState('genoises')
 
   return (
     <div className="p-6 max-w-full">
