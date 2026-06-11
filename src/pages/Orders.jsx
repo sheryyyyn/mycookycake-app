@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Plus, LayoutGrid, List, Eye, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths, isSameMonth, isSameDay, isToday, parseISO } from 'date-fns'
+import { Search, Plus, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths, isSameMonth, isToday } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import useStore from '../store'
 import {
@@ -10,17 +10,14 @@ import {
 import { StatusBadge, PaymentBadge, ModeBadge, StatusSelect, EmptyState } from '../components/ui'
 
 const STATUSES = ['nouvelle', 'confirmee', 'fini', 'remis', 'annulee']
-const MODES = ['retrait', 'livraison']
 
 export default function Orders() {
   const orders = useStore(s => s.orders)
   const updateOrder = useStore(s => s.updateOrder)
-  const navigate = useNavigate()
 
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterMode, setFilterMode] = useState('')
-  const [view, setView] = useState(typeof window !== 'undefined' && window.innerWidth < 640 ? 'cards' : 'table')
 
   const filtered = useMemo(() => {
     let list = [...orders]
@@ -82,29 +79,6 @@ export default function Orders() {
             <option value="retrait">Retrait</option>
             <option value="livraison">Livraison</option>
           </select>
-          <div className="flex rounded-xl border border-beige overflow-hidden bg-white">
-            <button
-              onClick={() => setView('table')}
-              className={`px-3 py-2 flex items-center gap-1 text-sm transition-colors ${view === 'table' ? 'bg-rose-100 text-bordeaux font-semibold' : 'text-warmgray-400 hover:bg-rose-50'}`}
-              title="Vue tableau"
-            >
-              <List size={15} />
-            </button>
-            <button
-              onClick={() => setView('cards')}
-              className={`px-3 py-2 flex items-center gap-1 text-sm transition-colors ${view === 'cards' ? 'bg-rose-100 text-bordeaux font-semibold' : 'text-warmgray-400 hover:bg-rose-50'}`}
-              title="Vue cartes"
-            >
-              <LayoutGrid size={15} />
-            </button>
-            <button
-              onClick={() => setView('calendar')}
-              className={`px-3 py-2 flex items-center gap-1 text-sm transition-colors ${view === 'calendar' ? 'bg-rose-100 text-bordeaux font-semibold' : 'text-warmgray-400 hover:bg-rose-50'}`}
-              title="Vue calendrier"
-            >
-              <CalendarDays size={15} />
-            </button>
-          </div>
         </div>
 
         {/* Status pills */}
@@ -130,83 +104,19 @@ export default function Orders() {
         </div>
       </div>
 
-      {/* Results count */}
       {(search || filterStatus || filterMode) && (
         <p className="text-xs text-warmgray-400 mb-3">{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</p>
       )}
 
-      {view === 'calendar' ? (
-        <CalendarView orders={filtered} />
-      ) : filtered.length === 0 ? (
-        <EmptyState title="Aucune commande trouvée" sub="Modifiez vos filtres ou créez une nouvelle commande." />
-      ) : view === 'table' ? (
-        <TableView orders={filtered} updateOrder={updateOrder} />
-      ) : (
-        <CardsView orders={filtered} updateOrder={updateOrder} />
-      )}
+      <CalendarView orders={filtered} updateOrder={updateOrder} />
     </div>
   )
 }
 
-function TableView({ orders, updateOrder }) {
-  const navigate = useNavigate()
-  return (
-    <div className="card overflow-hidden p-0">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-rose-100 bg-rose-50/50">
-              {['Prénom', 'Instagram', 'Produit', 'Date', 'Mode', 'Statut', 'Montant', 'Paiement', ''].map(h => (
-                <th key={h} className="text-left text-xs font-semibold text-warmgray-400 uppercase tracking-wide px-4 py-3">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((o, i) => (
-              <tr
-                key={o.id}
-                className={`border-b border-rose-50 hover:bg-rose-50/30 transition-colors cursor-pointer ${i % 2 === 1 ? 'bg-rose-50/10' : ''}`}
-                onClick={() => navigate(`/commandes/${o.id}`)}
-              >
-                <td className="px-4 py-3 font-medium text-chocolat">{o.clientFirstName} {o.clientLastName}</td>
-                <td className="px-4 py-3 text-rose-500 text-xs">{o.clientInstagram}</td>
-                <td className="px-4 py-3">
-                  <div className="font-medium text-chocolat">{getProductLabel(o.productType)}</div>
-                  <div className="text-xs text-warmgray-400">{o.productVariant}</div>
-                </td>
-                <td className="px-4 py-3 text-warmgray-500 text-xs whitespace-nowrap">
-                  {formatDate(o.deliveryDate)}
-                  <br />{o.deliveryTime}
-                </td>
-                <td className="px-4 py-3"><ModeBadge mode={o.deliveryMode} /></td>
-                <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                  <StatusSelect
-                    current={o.status}
-                    onChange={status => updateOrder(o.id, { status })}
-                  />
-                </td>
-                <td className="px-4 py-3 font-semibold text-chocolat whitespace-nowrap">{formatAmount(o.amountTotal)}</td>
-                <td className="px-4 py-3"><PaymentBadge status={o.paymentStatus} /></td>
-                <td className="px-4 py-3">
-                  <button className="p-1.5 rounded-lg text-warmgray-400 hover:text-bordeaux hover:bg-rose-50">
-                    <Eye size={15} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
-
-function CalendarView({ orders }) {
+function CalendarView({ orders, updateOrder }) {
   const navigate = useNavigate()
   const [currentMonth, setCurrentMonth] = useState(new Date())
-  const [expandedDays, setExpandedDays] = useState({})
+  const [selectedDay, setSelectedDay] = useState(null)
 
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(currentMonth)
@@ -231,158 +141,169 @@ function CalendarView({ orders }) {
     return map
   }, [orders])
 
+  const selectedDayOrders = selectedDay ? (ordersByDate[selectedDay] || []) : []
   const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 
   return (
-    <div className="card p-0 overflow-hidden">
-      {/* Nav mois */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-rose-100">
-        <button
-          onClick={() => setCurrentMonth(m => subMonths(m, 1))}
-          className="p-1.5 rounded-lg text-warmgray-400 hover:text-bordeaux hover:bg-rose-50 transition-colors"
-        >
-          <ChevronLeft size={18} />
-        </button>
-        <h2 className="font-playfair text-lg font-semibold text-chocolat capitalize">
-          {format(currentMonth, 'MMMM yyyy', { locale: fr })}
-        </h2>
-        <button
-          onClick={() => setCurrentMonth(m => addMonths(m, 1))}
-          className="p-1.5 rounded-lg text-warmgray-400 hover:text-bordeaux hover:bg-rose-50 transition-colors"
-        >
-          <ChevronRight size={18} />
-        </button>
-      </div>
+    <div className="flex gap-4">
+      {/* Calendrier */}
+      <div className={`card p-0 overflow-hidden transition-all ${selectedDay ? 'flex-1' : 'w-full'}`}>
+        {/* Nav mois */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-rose-100">
+          <button
+            onClick={() => setCurrentMonth(m => subMonths(m, 1))}
+            className="p-1.5 rounded-lg text-warmgray-400 hover:text-bordeaux hover:bg-rose-50 transition-colors"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <h2 className="font-playfair text-lg font-semibold text-chocolat capitalize">
+            {format(currentMonth, 'MMMM yyyy', { locale: fr })}
+          </h2>
+          <button
+            onClick={() => setCurrentMonth(m => addMonths(m, 1))}
+            className="p-1.5 rounded-lg text-warmgray-400 hover:text-bordeaux hover:bg-rose-50 transition-colors"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
 
-      {/* En-têtes jours */}
-      <div className="grid grid-cols-7 border-b border-rose-100">
-        {weekDays.map(wd => (
-          <div key={wd} className="text-center text-xs font-semibold text-warmgray-400 uppercase tracking-wide py-2">
-            {wd}
-          </div>
-        ))}
-      </div>
+        {/* En-têtes jours */}
+        <div className="grid grid-cols-7 border-b border-rose-100">
+          {weekDays.map(wd => (
+            <div key={wd} className="text-center text-xs font-semibold text-warmgray-400 uppercase tracking-wide py-2">
+              {wd}
+            </div>
+          ))}
+        </div>
 
-      {/* Grille */}
-      <div className="grid grid-cols-7">
-        {days.map((day, i) => {
-          const key = format(day, 'yyyy-MM-dd')
-          const dayOrders = ordersByDate[key] || []
-          const isCurrentMonth = isSameMonth(day, currentMonth)
-          const isToday_ = isToday(day)
-          const isExpanded = expandedDays[key] || false
-          const visibleOrders = isExpanded ? dayOrders : dayOrders.slice(0, 4)
-          const hiddenCount = dayOrders.length - 4
+        {/* Grille */}
+        <div className="grid grid-cols-7">
+          {days.map((day, i) => {
+            const key = format(day, 'yyyy-MM-dd')
+            const dayOrders = ordersByDate[key] || []
+            const isCurrentMonth = isSameMonth(day, currentMonth)
+            const isToday_ = isToday(day)
+            const isSelected = selectedDay === key
 
-          return (
-            <div
-              key={key}
-              className={`min-h-[110px] p-1.5 border-b border-r border-rose-50 ${!isCurrentMonth ? 'bg-rose-50/20' : ''} ${i % 7 === 6 ? 'border-r-0' : ''}`}
-            >
-              <div className={`text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full mb-1 ${
-                isToday_ ? 'bg-bordeaux text-white' : isCurrentMonth ? 'text-chocolat' : 'text-warmgray-300'
-              }`}>
-                {format(day, 'd')}
+            return (
+              <div
+                key={key}
+                onClick={() => dayOrders.length > 0 ? setSelectedDay(isSelected ? null : key) : null}
+                className={`min-h-[90px] p-2 border-b border-r border-rose-50 transition-colors
+                  ${!isCurrentMonth ? 'bg-rose-50/20' : ''}
+                  ${i % 7 === 6 ? 'border-r-0' : ''}
+                  ${dayOrders.length > 0 ? 'cursor-pointer hover:bg-rose-50/50' : ''}
+                  ${isSelected ? 'bg-rose-50 ring-1 ring-inset ring-bordeaux/20' : ''}
+                `}
+              >
+                <div className={`text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full mb-1.5 ${
+                  isToday_ ? 'bg-bordeaux text-white' : isCurrentMonth ? 'text-chocolat' : 'text-warmgray-300'
+                }`}>
+                  {format(day, 'd')}
+                </div>
+
+                {dayOrders.length > 0 && (
+                  <div className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md inline-block ${
+                    isSelected
+                      ? 'bg-bordeaux text-white'
+                      : 'bg-rose-100 text-bordeaux'
+                  }`}>
+                    {dayOrders.length} commande{dayOrders.length > 1 ? 's' : ''}
+                  </div>
+                )}
               </div>
-              <div className="space-y-1">
-                {visibleOrders.map(o => {
-                  const hasTime = Boolean(o.deliveryTime && o.deliveryTime.trim())
-                  const flavors = [o.flavorMain, o.flavorSecondary].filter(Boolean).join(' + ')
-                  const details = [o.productVariant, o.shape, flavors].filter(Boolean).join(' · ')
-                  return (
-                    <button
-                      key={o.id}
-                      onClick={() => navigate(`/commandes/${o.id}`)}
-                      className={`w-full text-left rounded-lg border px-1.5 py-1 transition-opacity hover:opacity-80 ${
-                        hasTime
-                          ? 'bg-green-50 border-green-200 text-green-800'
-                          : 'bg-gray-100 border-gray-200 text-gray-500'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="text-[10px] font-semibold truncate leading-tight">
-                          {o.clientInstagram || `${o.clientFirstName} ${o.clientLastName}`}
-                        </span>
-                        {hasTime && (
-                          <span className="text-[9px] font-medium shrink-0 opacity-80">{o.deliveryTime}</span>
-                        )}
+            )
+          })}
+        </div>
+
+        {/* Légende */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 px-5 py-3 border-t border-rose-100">
+          <span className="flex items-center gap-1.5 text-[11px] text-bordeaux font-medium">
+            <span className="w-2.5 h-2.5 rounded-sm bg-rose-100 border border-rose-300 inline-block" />
+            Jour avec commandes
+          </span>
+        </div>
+      </div>
+
+      {/* Panneau latéral */}
+      {selectedDay && (
+        <div className="w-80 shrink-0">
+          <div className="card p-0 overflow-hidden sticky top-4">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-rose-100 bg-rose-50/50">
+              <div>
+                <p className="font-playfair font-semibold text-chocolat capitalize">
+                  {format(new Date(selectedDay + 'T12:00:00'), 'EEEE d MMMM', { locale: fr })}
+                </p>
+                <p className="text-xs text-warmgray-400 mt-0.5">
+                  {selectedDayOrders.length} commande{selectedDayOrders.length > 1 ? 's' : ''}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedDay(null)}
+                className="p-1.5 rounded-lg text-warmgray-400 hover:text-bordeaux hover:bg-rose-100 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto max-h-[calc(100vh-220px)] p-3 space-y-3">
+              {selectedDayOrders
+                .sort((a, b) => (a.deliveryTime || '').localeCompare(b.deliveryTime || ''))
+                .map(o => (
+                  <button
+                    key={o.id}
+                    onClick={() => navigate(`/commandes/${o.id}`)}
+                    className="w-full text-left card hover:border-rose-300 hover:shadow-soft transition-all p-3"
+                  >
+                    {/* Pseudo / nom */}
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div>
+                        {o.clientInstagram ? (
+                          <p className="font-semibold text-rose-500 text-sm">{o.clientInstagram}</p>
+                        ) : null}
+                        <p className={`${o.clientInstagram ? 'text-xs text-warmgray-400' : 'font-semibold text-chocolat text-sm'}`}>
+                          {o.clientFirstName} {o.clientLastName}
+                        </p>
                       </div>
-                      {details && (
-                        <p className="text-[9px] leading-tight opacity-70 truncate mt-0.5">{details}</p>
+                      {o.deliveryTime && (
+                        <span className="text-xs font-bold text-bordeaux bg-rose-50 border border-rose-200 rounded-lg px-2 py-0.5 shrink-0">
+                          {o.deliveryTime}
+                        </span>
                       )}
-                    </button>
-                  )
-                })}
-                {!isExpanded && hiddenCount > 0 && (
-                  <button
-                    onClick={() => setExpandedDays(prev => ({ ...prev, [key]: true }))}
-                    className="text-[10px] text-bordeaux font-medium pl-1 hover:underline"
-                  >
-                    +{hiddenCount} de plus
-                  </button>
-                )}
-                {isExpanded && dayOrders.length > 4 && (
-                  <button
-                    onClick={() => setExpandedDays(prev => ({ ...prev, [key]: false }))}
-                    className="text-[10px] text-warmgray-400 font-medium pl-1 hover:underline"
-                  >
-                    Réduire
-                  </button>
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+                    </div>
 
-      {/* Légende */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-1 px-5 py-3 border-t border-rose-100">
-        <span className="flex items-center gap-1.5 text-[11px] text-green-700 font-medium">
-          <span className="w-2.5 h-2.5 rounded-sm bg-green-100 border border-green-300 inline-block" />
-          Heure de retrait renseignée
-        </span>
-        <span className="flex items-center gap-1.5 text-[11px] text-gray-500 font-medium">
-          <span className="w-2.5 h-2.5 rounded-sm bg-gray-100 border border-gray-300 inline-block" />
-          Heure non renseignée
-        </span>
-      </div>
-    </div>
-  )
-}
+                    {/* Produit */}
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-chocolat">
+                        {getProductLabel(o.productType)}
+                        {o.productVariant ? <span className="text-warmgray-400 font-normal"> · {o.productVariant}</span> : null}
+                      </p>
 
-function CardsView({ orders, updateOrder }) {
-  const navigate = useNavigate()
-  return (
-    <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
-      {orders.map(o => (
-        <div
-          key={o.id}
-          className="card hover:border-rose-300 hover:shadow-soft transition-all cursor-pointer"
-          onClick={() => navigate(`/commandes/${o.id}`)}
-        >
-          <div className="flex items-start justify-between gap-2 mb-3">
-            <div>
-              <p className="font-semibold text-chocolat">{o.clientFirstName} {o.clientLastName}</p>
-              <p className="text-xs text-rose-500">{o.clientInstagram}</p>
+                      {/* Forme */}
+                      {o.shape && (
+                        <p className="text-xs text-warmgray-500">
+                          <span className="font-medium">Forme :</span> {o.shape}
+                        </p>
+                      )}
+
+                      {/* Parfums */}
+                      {(o.flavorMain || o.flavorSecondary) && (
+                        <p className="text-xs text-warmgray-500">
+                          {[o.flavorMain, o.flavorSecondary].filter(Boolean).join(' + ')}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Heure de retrait si absente */}
+                    {!o.deliveryTime && (
+                      <p className="text-[10px] text-warmgray-300 mt-2 italic">Heure non renseignée</p>
+                    )}
+                  </button>
+                ))}
             </div>
-            <div onClick={e => e.stopPropagation()}>
-              <StatusSelect current={o.status} onChange={s => updateOrder(o.id, { status: s })} />
-            </div>
-          </div>
-          <div className="text-sm text-warmgray-500 space-y-1 mb-3">
-            <p><span className="font-medium text-chocolat">{getProductLabel(o.productType)}</span> · {o.productVariant}</p>
-            <p>{o.flavorMain}{o.flavorSecondary ? ` + ${o.flavorSecondary}` : ''}</p>
-            <p>{formatDate(o.deliveryDate)} à {o.deliveryTime}</p>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex gap-1.5 flex-wrap">
-              <ModeBadge mode={o.deliveryMode} />
-              <PaymentBadge status={o.paymentStatus} />
-            </div>
-            <span className="font-bold text-chocolat">{formatAmount(o.amountTotal)}</span>
           </div>
         </div>
-      ))}
+      )}
     </div>
   )
 }
