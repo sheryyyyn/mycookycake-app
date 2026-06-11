@@ -304,8 +304,8 @@ function CalendarView({ orders, updateOrder }) {
                       {(o.status === 'nouvelle' || o.status === 'confirmee') && (
                         <span className={`inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
                           o.status === 'confirmee'
-                            ? 'bg-amber-50 text-amber-700 border-amber-200'
-                            : 'bg-blue-50 text-blue-700 border-blue-200'
+                            ? 'bg-green-50 text-green-700 border-green-200'
+                            : 'bg-red-50 text-red-600 border-red-200'
                         }`}>
                           {o.status === 'confirmee' ? 'Confirmée' : 'À confirmer'}
                         </span>
