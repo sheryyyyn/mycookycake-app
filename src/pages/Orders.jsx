@@ -97,7 +97,7 @@ export default function Orders() {
             { value: 'nouvelle', label: 'À confirmer' },
             { value: 'confirmee', label: 'Confirmée' },
           ].map(({ value, label }) => {
-            const count = orders.filter(o => o.status === value).length
+            const count = orders.filter(o => o.status === value && (!o.deliveryDate || o.deliveryDate.slice(0, 10) >= today)).length
             return (
               <button
                 key={value}
