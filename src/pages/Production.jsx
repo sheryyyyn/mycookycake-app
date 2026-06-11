@@ -72,13 +72,87 @@ function KanbanCard({ order, onDragStart }) {
   )
 }
 
+function WeekDayPicker({ selectedDay, onSelect }) {
+  const [weekOffset, setWeekOffset] = useState(0)
+  const baseWeek = addWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), weekOffset)
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(baseWeek, i))
+  const orders = useStore(s => s.orders)
+
+  function ordersCountForDay(day) {
+    return orders.filter(o =>
+      o.status !== 'nouvelle' && o.status !== 'annulee' && o.deliveryDate && isSameDay(parseISO(o.deliveryDate), day)
+    ).length
+  }
+
+  return (
+    <div className="card mb-5">
+      <div className="flex items-center justify-between mb-3">
+        <button onClick={() => setWeekOffset(w => w - 1)} className="btn-ghost py-1 px-2">
+          <ChevronLeft size={15} />
+        </button>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold text-chocolat capitalize">
+            Semaine du {format(baseWeek, 'd MMMM yyyy', { locale: fr })}
+          </p>
+          {selectedDay && (
+            <button onClick={() => onSelect(null)} className="text-xs text-warmgray-400 hover:text-bordeaux underline">
+              Tout afficher
+            </button>
+          )}
+        </div>
+        <button onClick={() => setWeekOffset(w => w + 1)} className="btn-ghost py-1 px-2">
+          <ChevronRight size={15} />
+        </button>
+      </div>
+      <div className="grid grid-cols-7 gap-2">
+        {weekDays.map(day => {
+          const count = ordersCountForDay(day)
+          const isSelected = selectedDay && isSameDay(day, selectedDay)
+          const isToday = isSameDay(day, new Date())
+          return (
+            <button
+              key={day.toISOString()}
+              onClick={() => onSelect(isSelected ? null : day)}
+              className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 transition-all ${
+                isSelected
+                  ? 'bg-bordeaux border-bordeaux text-white'
+                  : count > 0
+                  ? 'bg-rose-50 border-rose-200 text-chocolat hover:border-bordeaux'
+                  : 'bg-white border-beige text-warmgray-400'
+              }`}
+            >
+              <span className={`text-[10px] font-semibold uppercase tracking-wide ${isSelected ? 'text-white/70' : isToday ? 'text-bordeaux' : ''}`}>
+                {format(day, 'EEE', { locale: fr })}
+              </span>
+              <span className={`text-base font-bold leading-none ${isToday && !isSelected ? 'text-bordeaux' : ''}`}>
+                {format(day, 'd')}
+              </span>
+              {count > 0 && (
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                  isSelected ? 'bg-white/20 text-white' : 'bg-bordeaux text-white'
+                }`}>
+                  {count}
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function KanbanView() {
   const orders = useStore(s => s.orders)
   const updateOrder = useStore(s => s.updateOrder)
   const dragId = useRef(null)
   const [dragOver, setDragOver] = useState(null)
+  const [selectedDay, setSelectedDay] = useState(null)
 
-  const kanbanOrders = orders.filter(o => o.status !== 'nouvelle' && o.status !== 'annulee')
+  const allKanbanOrders = orders.filter(o => o.status !== 'nouvelle' && o.status !== 'annulee')
+  const kanbanOrders = selectedDay
+    ? allKanbanOrders.filter(o => o.deliveryDate && isSameDay(parseISO(o.deliveryDate), selectedDay))
+    : allKanbanOrders
 
   function handleDragStart(id) {
     dragId.current = id
