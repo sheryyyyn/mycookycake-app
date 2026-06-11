@@ -356,7 +356,7 @@ export default function NewOrder() {
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="form-label">Date <span className="text-bordeaux">*</span></label>
-              <DateButton value={form.deliveryDate} onChange={v => set('deliveryDate', v)} />
+              <DatePicker value={form.deliveryDate} onChange={v => set('deliveryDate', v)} />
               {errors.deliveryDate && <p className="text-xs text-red-500">{errors.deliveryDate}</p>}
             </div>
             <Field form={form} errors={errors} onChange={set} k="deliveryTime" label="Heure" type="time" placeholder="(optionnel)" />
