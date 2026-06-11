@@ -175,9 +175,6 @@ export default function NewOrder() {
     navigate('/commandes')
   }
 
-  const F = (props) => <Field form={form} errors={errors} onChange={set} {...props} />
-  const FS = (props) => <FlavorSelect form={form} onChange={set} activeFlavors={activeFlavors} {...props} />
-
   return (
     <div className="p-3 sm:p-6 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-5">
