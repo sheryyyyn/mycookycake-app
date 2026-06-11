@@ -192,9 +192,9 @@ export function aggregateGenoises(orders) {
 
     if (slicesEach === 0) continue
 
-    const shapeRaw = o.shape || 'rond'
+    const shapeRaw = o.productType === 'layer_cup' ? 'rond' : (o.shape || 'rond')
     const shapeLabel = shapeRaw === 'coeur' ? 'Cœur' : 'Rond'
-    const typeLabel = o.productType === 'bento_cake' ? 'Bento Cake' : 'Layer Cake'
+    const typeLabel = o.productType === 'bento_cake' ? 'Bento Cake' : o.productType === 'layer_cup' ? 'Layer Cup' : 'Layer Cake'
 
     const parts = [typeLabel]
     if (sizeLabel) parts.push(sizeLabel)
