@@ -183,8 +183,8 @@ export default function Etiquettes() {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {labelOrders.map(o => (
-                  <EtiquetteLabel key={o.id} order={o} />
+                {labelOrders.map(({ order: o, colorIndex }) => (
+                  <EtiquetteLabel key={o.id} order={o} colorIndex={colorIndex} />
                 ))}
               </div>
             )}
