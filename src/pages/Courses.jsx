@@ -42,11 +42,11 @@ export default function Courses() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-3 sm:p-6 max-w-2xl mx-auto">
       {/* Header */}
       <div className="flex items-start justify-between mb-6 gap-4">
         <div>
-          <h1 className="font-playfair text-3xl font-bold text-chocolat">Courses</h1>
+          <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-chocolat">Courses</h1>
           <p className="text-sm text-warmgray-400 mt-0.5">
             Basé sur les commandes de la semaine en cours · {checked}/{total} acheté{checked > 1 ? 's' : ''}
           </p>

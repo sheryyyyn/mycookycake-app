@@ -38,16 +38,17 @@ export default function Orders() {
   }, [orders, search, filterStatus, filterMode])
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-3 sm:p-6 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="font-playfair text-3xl font-bold text-chocolat">Commandes</h1>
+          <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-chocolat">Commandes</h1>
           <p className="text-sm text-warmgray-400 mt-0.5">{orders.length} commande{orders.length !== 1 ? 's' : ''} au total</p>
         </div>
-        <Link to="/commandes/nouvelle" className="btn-primary">
+        <Link to="/commandes/nouvelle" className="btn-primary flex-shrink-0">
           <Plus size={16} />
-          Nouvelle commande
+          <span className="hidden sm:inline">Nouvelle commande</span>
+          <span className="sm:hidden">Nouvelle</span>
         </Link>
       </div>
 

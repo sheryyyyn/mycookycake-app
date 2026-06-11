@@ -249,7 +249,7 @@ export default function ClientForm() {
           <>
             {product?.variants?.length > 0 && (
               <FormField label="Taille / quantité">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {product.variants.map(v => (
                     <button
                       key={v.id}
@@ -347,7 +347,7 @@ export default function ClientForm() {
         {/* STEP 5 — Date & remise */}
         {step === 5 && (
           <>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <FormField label="Date souhaitée" required error={errors.deliveryDate}>
                 <input className={`form-input ${errors.deliveryDate ? 'border-red-300' : ''}`} type="date" value={form.deliveryDate} onChange={e => setField('deliveryDate', e.target.value)} />
               </FormField>
@@ -356,7 +356,7 @@ export default function ClientForm() {
               </FormField>
             </div>
             <FormField label="Mode de remise">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[['retrait', '🏪 Retrait', 'Je récupère ma commande sur place'], ['livraison', '🚗 Livraison', 'Je souhaite une livraison à domicile']].map(([val, label, sub]) => (
                   <button key={val} type="button" onClick={() => setField('deliveryMode', val)}
                     className={`p-4 rounded-xl border-2 text-left transition-all ${form.deliveryMode === val ? 'border-bordeaux bg-rose-50' : 'border-beige hover:border-rose-200'}`}>
@@ -371,7 +371,7 @@ export default function ClientForm() {
                 <FormField label="Adresse complète">
                   <input className="form-input" value={form.deliveryAddress} onChange={e => setField('deliveryAddress', e.target.value)} placeholder="12 rue de la Paix" />
                 </FormField>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <FormField label="Code postal">
                     <input className="form-input" value={form.deliveryZip} onChange={e => setField('deliveryZip', e.target.value)} placeholder="75001" />
                   </FormField>
@@ -398,7 +398,7 @@ export default function ClientForm() {
             <div className="bg-beige-light rounded-xl p-4 text-xs text-warmgray-500 mb-2">
               📸 Ajoute des photos ou screenshots de tes inspirations pour que je puisse visualiser ta commande. (optionnel)
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {form.photos.map((src, i) => (
                 <div key={i} className="relative aspect-square">
                   <img src={src} className="w-full h-full object-cover rounded-xl" />
@@ -455,7 +455,7 @@ function FormShell({ children, settings, step, total, stepLabel }) {
         <div className="w-full max-w-lg">
           {step === 0 && (
             <div className="text-center mb-8">
-              <h1 className="font-playfair text-3xl font-bold text-chocolat mb-2">Finalise ta commande</h1>
+              <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-chocolat mb-2">Finalise ta commande</h1>
               <p className="text-warmgray-500 text-sm leading-relaxed max-w-sm mx-auto">
                 {settings?.formIntro}
               </p>

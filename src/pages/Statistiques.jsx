@@ -165,11 +165,11 @@ export default function Statistiques() {
   const objPct = Math.min(100, Math.round((thisMonthCA / monthlyObjective) * 100))
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-3 sm:p-6 max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-start justify-between mb-6 gap-4">
         <div>
-          <h1 className="font-playfair text-3xl font-bold text-chocolat">Statistiques</h1>
+          <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-chocolat">Statistiques</h1>
           <p className="text-sm text-warmgray-400 mt-0.5">Vue d'ensemble de votre activité</p>
         </div>
         <div className="flex gap-1 bg-rose-50 rounded-xl p-1">

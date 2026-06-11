@@ -107,11 +107,11 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-5">
+    <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-5">
       {/* Header */}
       <div>
         <p className="text-xs font-semibold text-warmgray-400 uppercase tracking-widest mb-1">{todayUpperCase()}</p>
-        <h1 className="font-playfair text-3xl font-bold text-chocolat">Tableau de bord</h1>
+        <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-chocolat">Tableau de bord</h1>
       </div>
 
       {/* Stats Row */}

@@ -92,9 +92,9 @@ export default function Settings() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-3 sm:p-6 max-w-2xl mx-auto">
       <div className="mb-6">
-        <h1 className="font-playfair text-3xl font-bold text-chocolat">Paramètres</h1>
+        <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-chocolat">Paramètres</h1>
         <p className="text-sm text-warmgray-400 mt-0.5">Configuration de votre espace de gestion</p>
       </div>
 

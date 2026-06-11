@@ -41,7 +41,7 @@ export default function Login() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-rose-100 mb-4">
             <Cake size={28} className="text-bordeaux" />
           </div>
-          <h1 className="font-playfair text-3xl font-bold text-bordeaux">Mycookycake</h1>
+          <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-bordeaux">Mycookycake</h1>
           <p className="text-warmgray-400 text-sm mt-1">Espace de gestion privé</p>
         </div>
 

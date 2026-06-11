@@ -87,7 +87,7 @@ export default function OrderDetail() {
   const amountDue = (Number(current.amountTotal) || 0) - (Number(current.amountPaid) || 0)
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-3 sm:p-6 max-w-4xl mx-auto">
       {/* Back + actions */}
       <div className="flex items-center justify-between mb-5 gap-3">
         <button onClick={() => navigate('/commandes')} className="flex items-center gap-1 text-sm text-warmgray-400 hover:text-bordeaux transition-colors">
@@ -127,7 +127,7 @@ export default function OrderDetail() {
             </div>
           </div>
           <div className="text-right">
-            <p className="font-playfair text-3xl font-bold text-bordeaux">{formatAmount(current.amountTotal)}</p>
+            <p className="font-playfair text-2xl sm:text-3xl font-bold text-bordeaux">{formatAmount(current.amountTotal)}</p>
             <PaymentBadge status={current.paymentStatus} />
           </div>
         </div>
@@ -158,7 +158,7 @@ export default function OrderDetail() {
           </h2>
           {editing ? (
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input label="Prénom" {...field('clientFirstName')} />
                 <Input label="Nom" {...field('clientLastName')} />
               </div>
@@ -226,7 +226,7 @@ export default function OrderDetail() {
           </h2>
           {editing ? (
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input label="Date" type="date" {...field('deliveryDate')} />
                 <Input label="Heure" type="time" {...field('deliveryTime')} />
               </div>
@@ -237,7 +237,7 @@ export default function OrderDetail() {
               {form.deliveryMode === 'livraison' && (
                 <>
                   <Input label="Adresse" {...field('deliveryAddress')} />
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Input label="Code postal" {...field('deliveryZip')} />
                     <Input label="Ville" {...field('deliveryCity')} />
                   </div>
@@ -276,7 +276,7 @@ export default function OrderDetail() {
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div className="bg-rose-50 rounded-xl p-3 text-center">
                   <p className="text-xs text-warmgray-400 mb-1">Total</p>
                   <p className="font-bold text-chocolat">{formatAmount(current.amountTotal)}</p>

@@ -27,9 +27,9 @@ export default function Reminders() {
   const hasAny = sections.some(s => s.orders.length > 0)
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-3 sm:p-6 max-w-3xl mx-auto">
       <div className="mb-6">
-        <h1 className="font-playfair text-3xl font-bold text-chocolat">Rappels</h1>
+        <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-chocolat">Rappels</h1>
         <p className="text-sm text-warmgray-400 mt-0.5">Commandes à surveiller de près</p>
       </div>
 

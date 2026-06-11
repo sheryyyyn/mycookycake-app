@@ -83,7 +83,7 @@ export default function Etiquettes() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6 gap-4">
           <div>
-            <h1 className="font-playfair text-3xl font-bold text-chocolat">Étiquettes</h1>
+            <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-chocolat">Étiquettes</h1>
             <p className="text-sm text-warmgray-400 mt-0.5">Sélectionnez un jour pour afficher les étiquettes</p>
           </div>
           <button

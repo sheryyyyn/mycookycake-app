@@ -122,13 +122,13 @@ export default function NewOrder() {
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-3 sm:p-6 max-w-3xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate('/commandes')} className="flex items-center gap-1 text-sm text-warmgray-400 hover:text-bordeaux">
           <ChevronLeft size={16} /> Commandes
         </button>
       </div>
-      <h1 className="font-playfair text-3xl font-bold text-chocolat mb-6">Nouvelle commande</h1>
+      <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-chocolat mb-6">Nouvelle commande</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Cliente */}

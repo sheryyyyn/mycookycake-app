@@ -336,7 +336,7 @@ export default function Production() {
   return (
     <div className="p-6 max-w-full">
       <div className="mb-6">
-        <h1 className="font-playfair text-3xl font-bold text-chocolat">Production</h1>
+        <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-chocolat">Production</h1>
         <p className="text-sm text-warmgray-400 mt-0.5">Suivi de la production et des génoises</p>
       </div>
 

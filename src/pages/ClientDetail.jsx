@@ -40,7 +40,7 @@ export default function ClientDetail() {
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-3 sm:p-6 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-5">
         <button onClick={() => navigate('/clientes')} className="flex items-center gap-1 text-sm text-warmgray-400 hover:text-bordeaux">
           <ChevronLeft size={16} /> Clientes
