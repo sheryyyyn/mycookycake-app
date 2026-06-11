@@ -169,7 +169,7 @@ function KanbanView() {
   const allKanbanOrders = orders.filter(o => o.status !== 'nouvelle' && o.status !== 'annulee')
   const kanbanOrders = selectedDay
     ? allKanbanOrders.filter(o => o.deliveryDate && isSameDay(parseISO(o.deliveryDate), selectedDay))
-    : allKanbanOrders
+    : []
 
   function handleDragStart(id) {
     dragId.current = id
