@@ -50,6 +50,10 @@ export default function NewOrder() {
   }
 
   function handlePhotos(e) {
+    if (e._dataUrl) {
+      setForm(f => ({ ...f, photos: [...f.photos, e._dataUrl] }))
+      return
+    }
     const files = Array.from(e.target.files)
     files.forEach(file => {
       const reader = new FileReader()
