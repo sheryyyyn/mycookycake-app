@@ -248,22 +248,11 @@ export default function NewOrder() {
         {/* Photos */}
         <Card>
           <h2 className="font-playfair font-semibold text-chocolat text-lg mb-4">Photos d'inspiration</h2>
-          <div className="grid grid-cols-4 gap-2">
-            {form.photos.map((src, i) => (
-              <div key={i} className="relative aspect-square">
-                <img src={src} className="w-full h-full object-cover rounded-xl" />
-                <button type="button" onClick={() => setForm(f => ({ ...f, photos: f.photos.filter((_, j) => j !== i) }))}
-                  className="absolute top-1 right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center text-red-500 shadow">
-                  <X size={10} />
-                </button>
-              </div>
-            ))}
-            <label className="aspect-square rounded-xl border-2 border-dashed border-beige flex flex-col items-center justify-center cursor-pointer hover:border-rose-300 hover:bg-rose-50 transition-colors">
-              <Plus size={20} className="text-warmgray-400" />
-              <span className="text-xs text-warmgray-400 mt-1">Ajouter</span>
-              <input type="file" accept="image/*" multiple className="hidden" onChange={handlePhotos} />
-            </label>
-          </div>
+          <PhotoGallery
+            photos={form.photos}
+            onDelete={i => setForm(f => ({ ...f, photos: f.photos.filter((_, j) => j !== i) }))}
+            onAdd={handlePhotos}
+          />
         </Card>
 
         {/* Remise */}
