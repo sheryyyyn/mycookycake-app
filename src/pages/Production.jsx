@@ -415,8 +415,9 @@ export default function Production() {
         ))}
       </div>
 
-      {tab === 'kanban'   && <KanbanView />}
       {tab === 'genoises' && <GenoisesView />}
+      {tab === 'fourrage' && <FourrageView />}
+      {tab === 'kanban'   && <KanbanView />}
       {tab === 'planning' && <PlanningView />}
     </div>
   )
