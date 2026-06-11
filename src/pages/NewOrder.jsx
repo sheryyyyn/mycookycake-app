@@ -1,25 +1,60 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { ChevronLeft, Plus, X } from 'lucide-react'
+import { ChevronLeft, CalendarDays } from 'lucide-react'
+import { format, parseISO } from 'date-fns'
+import { fr } from 'date-fns/locale'
 import useStore from '../store'
-import { genId, computePaymentStatus, getProductLabel } from '../utils'
-import { Input, Select, Textarea, Card, PhotoGallery } from '../components/ui'
+import { genId, computePaymentStatus } from '../utils'
+import { Card, PhotoGallery } from '../components/ui'
 
-const SHAPES = ['rond', 'coeur', 'autre', 'non_concerne']
 const SHAPE_LABELS = { rond: 'Rond', coeur: 'Cœur', autre: 'Autre', non_concerne: 'Non concerné' }
 
 const INITIAL = {
-  clientFirstName: '', clientLastName: '', clientInstagram: '',
-  clientPhone: '', clientEmail: '',
-  productType: 'bento_cake', productVariant: '', quantity: '',
+  clientInstagram: '', clientEmail: '',
+  productType: 'bento_cake', productVariant: '',
   shape: 'rond',
-  flavorMain: '', flavorSecondary: '', supplements: [],
-  theme: '', colors: '', messageOnCake: '', allergies: '',
-  notesClient: '', notesInternal: '',
+  flavorMain: '', flavorBottom: '', flavorTop: '',
+  supplements: [], supplementOther: '',
+  colors: '', messageOnCake: '', allergies: '',
+  notesInternal: '',
   deliveryMode: 'retrait', deliveryDate: '', deliveryTime: '',
   deliveryAddress: '', deliveryZip: '', deliveryCity: '', deliveryNote: '',
-  amountTotal: '', amountPaid: '', status: 'nouvelle',
+  amountTotal: '', amountPaid: '',
   photos: [],
+}
+
+function DateButton({ value, onChange }) {
+  const inputRef = useRef(null)
+  const formatted = value
+    ? format(parseISO(value), 'EEE d MMMM', { locale: fr })
+    : null
+
+  function open() {
+    try { inputRef.current?.showPicker() } catch { inputRef.current?.click() }
+  }
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={open}
+        className="form-input text-left flex items-center gap-2 w-full"
+      >
+        <CalendarDays size={15} className="text-bordeaux flex-shrink-0" />
+        <span className={value ? 'text-chocolat capitalize font-medium' : 'text-warmgray-400'}>
+          {formatted ?? 'Choisir une date'}
+        </span>
+      </button>
+      <input
+        ref={inputRef}
+        type="date"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+        tabIndex={-1}
+      />
+    </div>
+  )
 }
 
 export default function NewOrder() {
@@ -34,8 +69,9 @@ export default function NewOrder() {
   const product = catalog.products?.find(p => p.id === form.productType)
   const activeFlavors = catalog.flavors?.filter(f => f.active) || []
   const activeSupplements = catalog.supplements?.filter(s => s.active) || []
+  const isPieceMontee = form.productType === 'piece_montee'
 
-  function setField(key, value) {
+  function set(key, value) {
     setForm(f => ({ ...f, [key]: value }))
     setErrors(e => ({ ...e, [key]: undefined }))
   }
@@ -50,12 +86,8 @@ export default function NewOrder() {
   }
 
   function handlePhotos(e) {
-    if (e._dataUrl) {
-      setForm(f => ({ ...f, photos: [...f.photos, e._dataUrl] }))
-      return
-    }
-    const files = Array.from(e.target.files)
-    files.forEach(file => {
+    if (e._dataUrl) { setForm(f => ({ ...f, photos: [...f.photos, e._dataUrl] })); return }
+    Array.from(e.target.files).forEach(file => {
       const reader = new FileReader()
       reader.onload = ev => setForm(f => ({ ...f, photos: [...f.photos, ev.target.result] }))
       reader.readAsDataURL(file)
@@ -66,7 +98,6 @@ export default function NewOrder() {
     const errs = {}
     if (!form.clientInstagram) errs.clientInstagram = 'Requis'
     if (!form.deliveryDate) errs.deliveryDate = 'Requis'
-    if (!form.deliveryTime) errs.deliveryTime = 'Requis'
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -75,29 +106,32 @@ export default function NewOrder() {
     e.preventDefault()
     if (!validate()) return
 
-    // Auto-create or link client
     const existing = clients.find(c =>
       c.instagram?.toLowerCase() === form.clientInstagram.toLowerCase()
     )
     if (!existing) {
       addClient({
         id: genId(),
-        firstName: form.clientFirstName,
-        lastName: form.clientLastName,
         instagram: form.clientInstagram,
-        phone: form.clientPhone,
         email: form.clientEmail,
         notes: '',
         createdAt: new Date().toISOString(),
       })
     }
 
+    const allSupplements = [
+      ...form.supplements,
+      ...(form.supplementOther.trim() ? [form.supplementOther.trim()] : []),
+    ]
+
     const amountTotal = Number(form.amountTotal) || 0
     const amountPaid = Number(form.amountPaid) || 0
 
     addOrder({
       ...form,
+      supplements: allSupplements,
       id: genId(),
+      status: 'nouvelle',
       createdAt: new Date().toISOString(),
       amountTotal,
       amountPaid,
@@ -113,7 +147,7 @@ export default function NewOrder() {
         <input
           className={`form-input ${errors[k] ? 'border-red-300 ring-1 ring-red-300' : ''}`}
           value={form[k]}
-          onChange={e => setField(k, e.target.value)}
+          onChange={e => set(k, e.target.value)}
           {...rest}
         />
         {errors[k] && <p className="text-xs text-red-500">{errors[k]}</p>}
@@ -121,43 +155,65 @@ export default function NewOrder() {
     )
   }
 
+  function FlavorSelect({ k, label }) {
+    return (
+      <div className="space-y-1">
+        <label className="form-label">{label}</label>
+        <select className="form-select" value={form[k]} onChange={e => set(k, e.target.value)}>
+          <option value="">Choisir...</option>
+          {['gourmand', 'fruite', 'premium'].map(cat => {
+            const fs = activeFlavors.filter(f => f.category === cat)
+            if (!fs.length) return null
+            return (
+              <optgroup key={cat} label={cat.charAt(0).toUpperCase() + cat.slice(1)}>
+                {fs.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
+              </optgroup>
+            )
+          })}
+        </select>
+      </div>
+    )
+  }
+
   return (
-    <div className="p-3 sm:p-6 max-w-3xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
+    <div className="p-3 sm:p-6 max-w-2xl mx-auto">
+      <div className="flex items-center gap-3 mb-5">
         <button onClick={() => navigate('/commandes')} className="flex items-center gap-1 text-sm text-warmgray-400 hover:text-bordeaux">
           <ChevronLeft size={16} /> Commandes
         </button>
       </div>
-      <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-chocolat mb-6">Nouvelle commande</h1>
+      <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-chocolat mb-5">Nouvelle commande</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Cliente */}
+      <form onSubmit={handleSubmit} className="space-y-3">
+
+        {/* ── Cliente ── */}
         <Card>
-          <h2 className="font-playfair font-semibold text-chocolat text-lg mb-4">Informations cliente</h2>
+          <h2 className="font-semibold text-chocolat mb-3">Cliente</h2>
           <div className="grid sm:grid-cols-2 gap-3">
-            <Field k="clientFirstName" label="Prénom" />
-            <Field k="clientLastName" label="Nom" />
             <Field k="clientInstagram" label="Instagram" required placeholder="@pseudo" />
-            <Field k="clientPhone" label="Téléphone" type="tel" />
-            <Field k="clientEmail" label="Email" type="email" className="sm:col-span-2" />
+            <Field k="clientEmail" label="Email" type="email" placeholder="(optionnel)" />
           </div>
         </Card>
 
-        {/* Produit */}
+        {/* ── Produit ── */}
         <Card>
-          <h2 className="font-playfair font-semibold text-chocolat text-lg mb-4">Produit</h2>
+          <h2 className="font-semibold text-chocolat mb-3">Produit</h2>
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="form-label">Type de produit</label>
-              <select className="form-select" value={form.productType} onChange={e => { setField('productType', e.target.value); setField('productVariant', '') }}>
+              <select
+                className="form-select"
+                value={form.productType}
+                onChange={e => { set('productType', e.target.value); set('productVariant', '') }}
+              >
                 {(catalog.products || []).filter(p => p.active).map(p => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
             </div>
             <div className="space-y-1">
-              <label className="form-label">Variante / taille</label>
-              <select className="form-select" value={form.productVariant} onChange={e => setField('productVariant', e.target.value)}>
+              <label className="form-label">Pièce</label>
+              <select className="form-select" value={form.productVariant} onChange={e => set('productVariant', e.target.value)}>
                 <option value="">Sélectionner...</option>
                 {(product?.variants || []).map(v => (
                   <option key={v.id} value={v.label}>
@@ -167,14 +223,12 @@ export default function NewOrder() {
               </select>
             </div>
             {product?.shapes?.length > 0 && (
-              <div className="space-y-1">
+              <div className="space-y-1 sm:col-span-2">
                 <label className="form-label">Forme</label>
                 <div className="flex gap-2 flex-wrap">
                   {product.shapes.map(s => (
                     <button
-                      key={s}
-                      type="button"
-                      onClick={() => setField('shape', s)}
+                      key={s} type="button" onClick={() => set('shape', s)}
                       className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${form.shape === s ? 'bg-bordeaux text-white border-bordeaux' : 'border-beige text-warmgray-500 hover:border-bordeaux'}`}
                     >
                       {SHAPE_LABELS[s]}
@@ -186,68 +240,60 @@ export default function NewOrder() {
           </div>
         </Card>
 
-        {/* Saveurs */}
+        {/* ── Saveurs & Suppléments ── */}
         <Card>
-          <h2 className="font-playfair font-semibold text-chocolat text-lg mb-4">Saveurs & Suppléments</h2>
-          <div className="grid sm:grid-cols-2 gap-3 mb-4">
-            <div className="space-y-1">
-              <label className="form-label">Saveur principale</label>
-              <select className="form-select" value={form.flavorMain} onChange={e => setField('flavorMain', e.target.value)}>
-                <option value="">Choisir...</option>
-                {['gourmand', 'fruite', 'premium'].map(cat => {
-                  const fs = activeFlavors.filter(f => f.category === cat)
-                  if (!fs.length) return null
-                  return (
-                    <optgroup key={cat} label={cat.charAt(0).toUpperCase() + cat.slice(1)}>
-                      {fs.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
-                    </optgroup>
-                  )
-                })}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="form-label">Saveur secondaire</label>
-              <select className="form-select" value={form.flavorSecondary} onChange={e => setField('flavorSecondary', e.target.value)}>
-                <option value="">Aucune</option>
-                {activeFlavors.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
-              </select>
-            </div>
+          <h2 className="font-semibold text-chocolat mb-3">Saveurs & Suppléments</h2>
+          <div className="grid sm:grid-cols-2 gap-3 mb-3">
+            {isPieceMontee ? (
+              <>
+                <FlavorSelect k="flavorBottom" label="Saveur étage bas" />
+                <FlavorSelect k="flavorTop" label="Saveur étage haut" />
+              </>
+            ) : (
+              <div className="sm:col-span-2">
+                <FlavorSelect k="flavorMain" label="Saveur" />
+              </div>
+            )}
           </div>
-          <div>
-            <label className="form-label">Suppléments</label>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {activeSupplements.map(s => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => toggleSupplement(s.name)}
-                  className={`px-3 py-1.5 rounded-lg text-xs border transition-colors ${form.supplements.includes(s.name) ? 'bg-bordeaux text-white border-bordeaux' : 'border-beige text-warmgray-500 hover:border-rose-300'}`}
-                >
-                  {s.name}{s.price > 0 ? ` +${s.price}€` : ''}
-                </button>
-              ))}
+          {activeSupplements.length > 0 && (
+            <div className="mb-3">
+              <label className="form-label">Suppléments</label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {activeSupplements.map(s => (
+                  <button
+                    key={s.id} type="button" onClick={() => toggleSupplement(s.name)}
+                    className={`px-3 py-1.5 rounded-lg text-xs border transition-colors ${form.supplements.includes(s.name) ? 'bg-bordeaux text-white border-bordeaux' : 'border-beige text-warmgray-500 hover:border-rose-300'}`}
+                  >
+                    {s.name}{s.price > 0 ? ` +${s.price}€` : ''}
+                  </button>
+                ))}
+              </div>
             </div>
+          )}
+          <div className="space-y-1">
+            <label className="form-label">Autre supplément</label>
+            <input
+              className="form-input"
+              placeholder="Ex: figurines, fleurs fraîches..."
+              value={form.supplementOther}
+              onChange={e => set('supplementOther', e.target.value)}
+            />
           </div>
         </Card>
 
-        {/* Personnalisation */}
+        {/* ── Personnalisation ── */}
         <Card>
-          <h2 className="font-playfair font-semibold text-chocolat text-lg mb-4">Personnalisation</h2>
+          <h2 className="font-semibold text-chocolat mb-3">Personnalisation</h2>
           <div className="space-y-3">
-            <Field k="theme" label="Thème" placeholder="Ex: anniversaire bohème, baby shower..." />
-            <Field k="colors" label="Couleurs souhaitées" placeholder="Ex: rose poudré, blanc, or..." />
+            <Field k="colors" label="Couleur de couverture" placeholder="Ex: rose poudré, blanc, or..." />
             <Field k="messageOnCake" label="Message sur le gâteau" />
             <Field k="allergies" label="Allergies / restrictions" />
-            <div className="space-y-1">
-              <label className="form-label">Notes cliente</label>
-              <textarea className="form-textarea" rows={3} value={form.notesClient} onChange={e => setField('notesClient', e.target.value)} />
-            </div>
           </div>
         </Card>
 
-        {/* Photos */}
+        {/* ── Photos ── */}
         <Card>
-          <h2 className="font-playfair font-semibold text-chocolat text-lg mb-4">Photos d'inspiration</h2>
+          <h2 className="font-semibold text-chocolat mb-3">Photos d'inspiration</h2>
           <PhotoGallery
             photos={form.photos}
             onDelete={i => setForm(f => ({ ...f, photos: f.photos.filter((_, j) => j !== i) }))}
@@ -255,18 +301,22 @@ export default function NewOrder() {
           />
         </Card>
 
-        {/* Remise */}
+        {/* ── Date & Remise ── */}
         <Card>
-          <h2 className="font-playfair font-semibold text-chocolat text-lg mb-4">Date & remise</h2>
+          <h2 className="font-semibold text-chocolat mb-3">Date & remise</h2>
           <div className="grid sm:grid-cols-2 gap-3">
-            <Field k="deliveryDate" label="Date" type="date" required />
-            <Field k="deliveryTime" label="Heure" type="time" required />
+            <div className="space-y-1">
+              <label className="form-label">Date <span className="text-bordeaux">*</span></label>
+              <DateButton value={form.deliveryDate} onChange={v => set('deliveryDate', v)} />
+              {errors.deliveryDate && <p className="text-xs text-red-500">{errors.deliveryDate}</p>}
+            </div>
+            <Field k="deliveryTime" label="Heure" type="time" placeholder="(optionnel)" />
             <div className="space-y-1 sm:col-span-2">
               <label className="form-label">Mode</label>
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 {['retrait', 'livraison'].map(m => (
                   <label key={m} className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="deliveryMode" value={m} checked={form.deliveryMode === m} onChange={() => setField('deliveryMode', m)} className="accent-bordeaux" />
+                    <input type="radio" name="deliveryMode" value={m} checked={form.deliveryMode === m} onChange={() => set('deliveryMode', m)} className="accent-bordeaux" />
                     <span className="text-sm text-chocolat font-medium capitalize">{m}</span>
                   </label>
                 ))}
@@ -277,36 +327,25 @@ export default function NewOrder() {
                 <Field k="deliveryAddress" label="Adresse" className="sm:col-span-2" />
                 <Field k="deliveryZip" label="Code postal" />
                 <Field k="deliveryCity" label="Ville" />
-                <Field k="deliveryNote" label="Note livraison" className="sm:col-span-2" />
               </>
             )}
           </div>
         </Card>
 
-        {/* Admin fields */}
+        {/* ── Paiement ── */}
         <Card>
-          <h2 className="font-playfair font-semibold text-chocolat text-lg mb-4">Paiement & statut</h2>
+          <h2 className="font-semibold text-chocolat mb-3">Paiement</h2>
           <div className="grid sm:grid-cols-2 gap-3">
             <Field k="amountTotal" label="Montant total (€)" type="number" step="0.5" />
             <Field k="amountPaid" label="Montant payé (€)" type="number" step="0.5" />
-            <div className="space-y-1">
-              <label className="form-label">Statut initial</label>
-              <select className="form-select" value={form.status} onChange={e => setField('status', e.target.value)}>
-                <option value="nouvelle">Nouvelle commande</option>
-                <option value="confirmee">Confirmée</option>
-                <option value="fini">Fini</option>
-                <option value="remis">Remis</option>
-                <option value="annulee">Annulée</option>
-              </select>
-            </div>
           </div>
           <div className="space-y-1 mt-3">
             <label className="form-label">Notes internes</label>
-            <textarea className="form-textarea" rows={3} value={form.notesInternal} onChange={e => setField('notesInternal', e.target.value)} />
+            <textarea className="form-textarea" rows={2} value={form.notesInternal} onChange={e => set('notesInternal', e.target.value)} />
           </div>
         </Card>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 pb-6">
           <button type="submit" className="btn-primary flex-1 justify-center py-3">
             Créer la commande
           </button>
