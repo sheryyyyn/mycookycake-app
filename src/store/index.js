@@ -1,189 +1,220 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { seedOrders, seedClients, seedCatalog } from '../data/seed'
+import { supabase } from '../lib/supabase'
 import { computePaymentStatus } from '../utils'
 
-const useStore = create(
-  persist(
-    (set, get) => ({
-      // ── Auth ──────────────────────────────────────────────
-      isAuthenticated: false,
+const DEFAULT_SETTINGS = {
+  businessName: 'Mycookycake',
+  adminPassword: 'mycookycake2024',
+  formIntro: "Merci de remplir ce formulaire après notre échange. Il me permettra d'enregistrer tous les détails de ta commande.",
+  pickupInfo: 'Retrait possible du vendredi au dimanche sur rendez-vous.',
+  conditions: "Ce formulaire ne confirme pas automatiquement une disponibilité. Il sert à récapituler les informations validées ensemble.",
+  logoUrl: '',
+}
 
-      login(password) {
-        const { settings } = get()
-        if (password === settings.adminPassword) {
-          set({ isAuthenticated: true })
-          return true
-        }
-        return false
-      },
+const DEFAULT_CATALOG = { products: [], flavors: [], supplements: [] }
 
-      logout() {
-        set({ isAuthenticated: false })
-      },
+// ── Supabase helpers ──────────────────────────────────────────────────────────
 
-      // ── Orders ────────────────────────────────────────────
-      orders: [],
+async function saveAppData(key, value) {
+  await supabase.from('app_data').upsert({ key, value })
+}
 
-      addOrder(order) {
-        set(s => ({ orders: [order, ...s.orders] }))
-      },
+// ── Store ─────────────────────────────────────────────────────────────────────
 
-      bulkImport({ orders: newOrders, clients: newClients }) {
-        const { orders, clients } = get()
-        const existingOrderIds = new Set(orders.map(o => o.id))
-        const existingInsta = new Set(clients.map(c => c.instagram?.toLowerCase()).filter(Boolean))
-        const filteredOrders = newOrders.filter(o => !existingOrderIds.has(o.id))
-        const filteredClients = newClients.filter(c => !existingInsta.has(c.instagram?.toLowerCase()))
-        set({
-          orders: [...filteredOrders, ...orders],
-          clients: [...filteredClients, ...clients],
-        })
-      },
+const useStore = create((set, get) => ({
 
-      updateOrder(id, updates) {
-        set(s => ({
-          orders: s.orders.map(o =>
-            o.id === id
-              ? {
-                  ...o,
-                  ...updates,
-                  paymentStatus: computePaymentStatus(
-                    updates.amountTotal ?? o.amountTotal,
-                    updates.amountPaid ?? o.amountPaid,
-                  ),
-                }
-              : o,
-          ),
-        }))
-      },
+  // ── Loading ───────────────────────────────────────────────────────────────
+  loading: true,
 
-      deleteOrder(id) {
-        set(s => ({ orders: s.orders.filter(o => o.id !== id) }))
-      },
+  async loadData() {
+    const [ordersRes, clientsRes, catalogRes, settingsRes] = await Promise.all([
+      supabase.from('orders').select('data').order('created_at', { ascending: false }),
+      supabase.from('clients').select('data'),
+      supabase.from('app_data').select('value').eq('key', 'catalog').maybeSingle(),
+      supabase.from('app_data').select('value').eq('key', 'settings').maybeSingle(),
+    ])
 
-      // ── Clients ───────────────────────────────────────────
-      clients: [],
+    set({
+      orders: ordersRes.data?.map(r => r.data) ?? [],
+      clients: clientsRes.data?.map(r => r.data) ?? [],
+      catalog: catalogRes.data?.value ?? DEFAULT_CATALOG,
+      settings: { ...DEFAULT_SETTINGS, ...(settingsRes.data?.value ?? {}) },
+      loading: false,
+    })
+  },
 
-      addClient(client) {
-        set(s => ({ clients: [client, ...s.clients] }))
-      },
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  isAuthenticated: false,
 
-      updateClient(id, updates) {
-        set(s => ({
-          clients: s.clients.map(c => (c.id === id ? { ...c, ...updates } : c)),
-        }))
-      },
+  login(password) {
+    const { settings } = get()
+    if (password === settings.adminPassword) {
+      set({ isAuthenticated: true })
+      return true
+    }
+    return false
+  },
 
-      deleteClient(id) {
-        set(s => ({ clients: s.clients.filter(c => c.id !== id) }))
-      },
+  logout() {
+    set({ isAuthenticated: false })
+  },
 
-      // ── Catalog ───────────────────────────────────────────
-      catalog: { products: [], flavors: [], supplements: [] },
+  // ── Orders ────────────────────────────────────────────────────────────────
+  orders: [],
 
-      // Products
-      updateCatalogProduct(id, updates) {
-        set(s => ({
-          catalog: {
-            ...s.catalog,
-            products: s.catalog.products.map(p => (p.id === id ? { ...p, ...updates } : p)),
-          },
-        }))
-      },
-      addCatalogProduct(product) {
-        set(s => ({ catalog: { ...s.catalog, products: [...s.catalog.products, product] } }))
-      },
-      deleteCatalogProduct(id) {
-        set(s => ({ catalog: { ...s.catalog, products: s.catalog.products.filter(p => p.id !== id) } }))
-      },
+  async addOrder(order) {
+    set(s => ({ orders: [order, ...s.orders] }))
+    await supabase.from('orders').upsert({ id: order.id, data: order })
+  },
 
-      // Flavors
-      updateFlavor(id, updates) {
-        set(s => ({
-          catalog: {
-            ...s.catalog,
-            flavors: s.catalog.flavors.map(f => (f.id === id ? { ...f, ...updates } : f)),
-          },
-        }))
-      },
-      addFlavor(flavor) {
-        set(s => ({ catalog: { ...s.catalog, flavors: [...s.catalog.flavors, flavor] } }))
-      },
-      deleteFlavor(id) {
-        set(s => ({ catalog: { ...s.catalog, flavors: s.catalog.flavors.filter(f => f.id !== id) } }))
-      },
+  async updateOrder(id, updates) {
+    set(s => ({
+      orders: s.orders.map(o =>
+        o.id === id
+          ? {
+              ...o,
+              ...updates,
+              paymentStatus: computePaymentStatus(
+                updates.amountTotal ?? o.amountTotal,
+                updates.amountPaid ?? o.amountPaid,
+              ),
+            }
+          : o,
+      ),
+    }))
+    const updated = get().orders.find(o => o.id === id)
+    if (updated) await supabase.from('orders').upsert({ id, data: updated })
+  },
 
-      // Supplements
-      updateSupplement(id, updates) {
-        set(s => ({
-          catalog: {
-            ...s.catalog,
-            supplements: s.catalog.supplements.map(x => (x.id === id ? { ...x, ...updates } : x)),
-          },
-        }))
-      },
-      addSupplement(supp) {
-        set(s => ({ catalog: { ...s.catalog, supplements: [...s.catalog.supplements, supp] } }))
-      },
-      deleteSupplement(id) {
-        set(s => ({ catalog: { ...s.catalog, supplements: s.catalog.supplements.filter(x => x.id !== id) } }))
-      },
+  async deleteOrder(id) {
+    set(s => ({ orders: s.orders.filter(o => o.id !== id) }))
+    await supabase.from('orders').delete().eq('id', id)
+  },
 
-      // ── Shopping (Courses) ────────────────────────────────
-      shoppingChecked: {},
+  async bulkImport({ orders: newOrders, clients: newClients }) {
+    const { orders, clients } = get()
+    const existingOrderIds = new Set(orders.map(o => o.id))
+    const existingInsta = new Set(clients.map(c => c.instagram?.toLowerCase()).filter(Boolean))
+    const filteredOrders = newOrders.filter(o => !existingOrderIds.has(o.id))
+    const filteredClients = newClients.filter(c => !existingInsta.has(c.instagram?.toLowerCase()))
 
-      toggleShoppingItem(key) {
-        set(s => ({
-          shoppingChecked: { ...s.shoppingChecked, [key]: !s.shoppingChecked[key] },
-        }))
-      },
+    set({
+      orders: [...filteredOrders, ...orders],
+      clients: [...filteredClients, ...clients],
+    })
 
-      clearShoppingChecked() {
-        set({ shoppingChecked: {} })
-      },
+    if (filteredOrders.length > 0) {
+      await supabase.from('orders').upsert(filteredOrders.map(o => ({ id: o.id, data: o })))
+    }
+    if (filteredClients.length > 0) {
+      await supabase.from('clients').upsert(filteredClients.map(c => ({ id: c.id, data: c })))
+    }
+  },
 
-      // ── Settings ──────────────────────────────────────────
-      settings: {
-        businessName: 'Mycookycake',
-        adminPassword: 'mycookycake2024',
-        formIntro: 'Merci de remplir ce formulaire après notre échange. Il me permettra d\'enregistrer tous les détails de ta commande.',
-        pickupInfo: 'Retrait possible du vendredi au dimanche sur rendez-vous.',
-        conditions: 'Ce formulaire ne confirme pas automatiquement une disponibilité. Il sert à récapituler les informations validées ensemble.',
-        logoUrl: '',
-      },
+  // ── Clients ───────────────────────────────────────────────────────────────
+  clients: [],
 
-      updateSettings(updates) {
-        set(s => ({ settings: { ...s.settings, ...updates } }))
-      },
+  async addClient(client) {
+    set(s => ({ clients: [client, ...s.clients] }))
+    await supabase.from('clients').upsert({ id: client.id, data: client })
+  },
 
-      // ── Seed ──────────────────────────────────────────────
-      deleteSeedOrders() {
-        const SEED_INSTAS = new Set([
-          '@lea_martin', '@camille.d', '@sofia_b',
-          '@jademoreau', '@emma_l', '@chloe_petit_',
-        ])
-        set(s => ({
-          orders: s.orders.filter(o => !SEED_INSTAS.has(o.clientInstagram)),
-          clients: s.clients.filter(c => !SEED_INSTAS.has(c.instagram)),
-        }))
-      },
+  async updateClient(id, updates) {
+    set(s => ({
+      clients: s.clients.map(c => (c.id === id ? { ...c, ...updates } : c)),
+    }))
+    const updated = get().clients.find(c => c.id === id)
+    if (updated) await supabase.from('clients').upsert({ id, data: updated })
+  },
 
-      initSeed() {
-        const { orders } = get()
-        if (orders.length === 0) {
-          set({
-            orders: seedOrders,
-            clients: seedClients,
-            catalog: seedCatalog,
-          })
-        }
+  async deleteClient(id) {
+    set(s => ({ clients: s.clients.filter(c => c.id !== id) }))
+    await supabase.from('clients').delete().eq('id', id)
+  },
+
+  // ── Catalog ───────────────────────────────────────────────────────────────
+  catalog: DEFAULT_CATALOG,
+
+  async updateCatalogProduct(id, updates) {
+    set(s => ({
+      catalog: {
+        ...s.catalog,
+        products: s.catalog.products.map(p => (p.id === id ? { ...p, ...updates } : p)),
       },
-    }),
-    {
-      name: 'mycookycake-v1',
-    },
-  ),
-)
+    }))
+    await saveAppData('catalog', get().catalog)
+  },
+
+  async addCatalogProduct(product) {
+    set(s => ({ catalog: { ...s.catalog, products: [...s.catalog.products, product] } }))
+    await saveAppData('catalog', get().catalog)
+  },
+
+  async deleteCatalogProduct(id) {
+    set(s => ({ catalog: { ...s.catalog, products: s.catalog.products.filter(p => p.id !== id) } }))
+    await saveAppData('catalog', get().catalog)
+  },
+
+  async updateFlavor(id, updates) {
+    set(s => ({
+      catalog: {
+        ...s.catalog,
+        flavors: s.catalog.flavors.map(f => (f.id === id ? { ...f, ...updates } : f)),
+      },
+    }))
+    await saveAppData('catalog', get().catalog)
+  },
+
+  async addFlavor(flavor) {
+    set(s => ({ catalog: { ...s.catalog, flavors: [...s.catalog.flavors, flavor] } }))
+    await saveAppData('catalog', get().catalog)
+  },
+
+  async deleteFlavor(id) {
+    set(s => ({ catalog: { ...s.catalog, flavors: s.catalog.flavors.filter(f => f.id !== id) } }))
+    await saveAppData('catalog', get().catalog)
+  },
+
+  async updateSupplement(id, updates) {
+    set(s => ({
+      catalog: {
+        ...s.catalog,
+        supplements: s.catalog.supplements.map(x => (x.id === id ? { ...x, ...updates } : x)),
+      },
+    }))
+    await saveAppData('catalog', get().catalog)
+  },
+
+  async addSupplement(supp) {
+    set(s => ({ catalog: { ...s.catalog, supplements: [...s.catalog.supplements, supp] } }))
+    await saveAppData('catalog', get().catalog)
+  },
+
+  async deleteSupplement(id) {
+    set(s => ({ catalog: { ...s.catalog, supplements: s.catalog.supplements.filter(x => x.id !== id) } }))
+    await saveAppData('catalog', get().catalog)
+  },
+
+  // ── Shopping ──────────────────────────────────────────────────────────────
+  shoppingChecked: {},
+
+  toggleShoppingItem(key) {
+    set(s => ({
+      shoppingChecked: { ...s.shoppingChecked, [key]: !s.shoppingChecked[key] },
+    }))
+  },
+
+  clearShoppingChecked() {
+    set({ shoppingChecked: {} })
+  },
+
+  // ── Settings ──────────────────────────────────────────────────────────────
+  settings: DEFAULT_SETTINGS,
+
+  async updateSettings(updates) {
+    set(s => ({ settings: { ...s.settings, ...updates } }))
+    await saveAppData('settings', get().settings)
+  },
+}))
 
 export default useStore
