@@ -93,17 +93,6 @@ export default function Dashboard() {
     return d >= now && d <= addDays(now, 7)
   })
 
-  // Status breakdown for donut
-  const statusCounts = { confirmee: 0, nouvelle: 0, fini: 0, remis: 0 }
-  activeOrders.forEach(o => { if (statusCounts[o.status] !== undefined) statusCounts[o.status]++ })
-
-  const donutSegments = [
-    { label: 'Confirmée', value: statusCounts.confirmee, color: '#f59e0b' },
-    { label: 'Nouvelle', value: statusCounts.nouvelle, color: '#6366f1' },
-    { label: 'Finie', value: statusCounts.fini, color: '#10b981' },
-    { label: 'Remise', value: statusCounts.remis, color: '#e879a0' },
-  ].filter(s => s.value > 0)
-
   // Recent orders for table (last 5 non-cancelled)
   const recentOrders = [...activeOrders]
     .sort((a, b) => (b.createdAt || b.id || '').localeCompare(a.createdAt || a.id || ''))
