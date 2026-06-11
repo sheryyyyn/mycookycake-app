@@ -97,8 +97,7 @@ export default function Dashboard() {
   const weekOrders = activeOrders.filter(o => {
     if (!o.deliveryDate) return false
     const d = parseISO(o.deliveryDate)
-    const now = startOfDay(new Date())
-    return d >= now && d <= addDays(now, 7)
+    return d >= today && d <= addDays(today, 7)
   })
 
   // Recent orders for table (last 5 non-cancelled)
