@@ -172,7 +172,14 @@ function KanbanView() {
   }
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4 min-h-[calc(100vh-220px)]">
+    <div>
+      <WeekDayPicker selectedDay={selectedDay} onSelect={setSelectedDay} />
+      {selectedDay && kanbanOrders.length === 0 && (
+        <p className="text-sm text-warmgray-400 text-center py-6">
+          Aucune commande ce jour
+        </p>
+      )}
+    <div className="flex gap-4 overflow-x-auto pb-4 min-h-[calc(100vh-340px)]">
       {KANBAN_COLUMNS.map(col => {
         const colOrders = kanbanOrders.filter(o => getProductionStatus(o) === col.id)
         return (
