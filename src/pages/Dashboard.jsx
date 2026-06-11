@@ -13,69 +13,7 @@ import {
   getStatusLabel,
   getProductLabel,
   formatDateShort,
-  STATUS_CONFIG,
 } from '../utils'
-
-// ── Donut Chart ───────────────────────────────────────────────────────────────
-function DonutChart({ segments }) {
-  const total = segments.reduce((s, x) => s + x.value, 0)
-  if (total === 0) return (
-    <div className="flex items-center justify-center h-40 text-warmgray-400 text-sm">Aucune donnée</div>
-  )
-
-  let offset = 0
-  const r = 52
-  const cx = 64
-  const cy = 64
-  const circ = 2 * Math.PI * r
-  const strokeWidth = 18
-
-  const arcs = segments.map(seg => {
-    const pct = seg.value / total
-    const dash = pct * circ
-    const arc = { ...seg, dash, offset: circ - offset, pct }
-    offset += dash
-    return arc
-  })
-
-  return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="relative">
-        <svg width={128} height={128} viewBox="0 0 128 128">
-          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f3f4f6" strokeWidth={strokeWidth} />
-          {arcs.map((arc, i) => (
-            <circle
-              key={i}
-              cx={cx} cy={cy} r={r}
-              fill="none"
-              stroke={arc.color}
-              strokeWidth={strokeWidth}
-              strokeDasharray={`${arc.dash} ${circ - arc.dash}`}
-              strokeDashoffset={arc.offset}
-              strokeLinecap="butt"
-              transform="rotate(-90 64 64)"
-            />
-          ))}
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-bold text-chocolat">{Math.round((arcs[0]?.pct ?? 0) * 100)}%</span>
-          <span className="text-[10px] text-warmgray-400">Confirmées</span>
-        </div>
-      </div>
-      <div className="space-y-1.5 w-full">
-        {segments.map((seg, i) => (
-          <div key={i} className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: seg.color }} />
-              <span className="text-warmgray-500">{seg.label}</span>
-            </div>
-            <span className="font-semibold text-chocolat">{Math.round((seg.value / total) * 100)}%</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 // ── Mini Calendar ─────────────────────────────────────────────────────────────
 function MiniCalendar({ orders }) {
