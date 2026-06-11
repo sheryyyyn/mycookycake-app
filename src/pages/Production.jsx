@@ -80,7 +80,7 @@ function WeekDayPicker({ orders, selectedDay, onSelect }) {
   const baseWeek = addWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), weekOffset)
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(baseWeek, i))
 
-  const allKanban = orders.filter(o => o.status !== 'nouvelle' && o.status !== 'annulee')
+  const allKanban = orders.filter(o => o.status !== 'annulee')
 
   function countForDay(day) {
     return allKanban.filter(o => o.deliveryDate && isSameDay(parseISO(o.deliveryDate), day)).length
