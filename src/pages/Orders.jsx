@@ -19,8 +19,12 @@ export default function Orders() {
   const [filterStatus, setFilterStatus] = useState('')
   const [filterMode, setFilterMode] = useState('')
 
+  const today = format(new Date(), 'yyyy-MM-dd')
+
   const filtered = useMemo(() => {
     let list = [...orders]
+    // Uniquement les commandes à partir d'aujourd'hui
+    list = list.filter(o => !o.deliveryDate || o.deliveryDate.slice(0, 10) >= today)
     if (filterStatus) list = list.filter(o => o.status === filterStatus)
     if (filterMode) list = list.filter(o => o.deliveryMode === filterMode)
     if (search.trim()) {
