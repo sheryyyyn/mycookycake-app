@@ -59,6 +59,10 @@ export default function OrderDetail() {
   }
 
   function handleAddPhotos(e) {
+    if (e._dataUrl) {
+      updateOrder(id, { photos: [...(order.photos || []), e._dataUrl] })
+      return
+    }
     const files = Array.from(e.target.files)
     files.forEach(file => {
       const reader = new FileReader()
