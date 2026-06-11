@@ -192,7 +192,11 @@ function KanbanView() {
     <div>
       <WeekDayPicker orders={orders} selectedDay={selectedDay} onSelect={setSelectedDay} />
 
-      {selectedDay && kanbanOrders.length === 0 ? (
+      {!selectedDay ? (
+        <div className="card text-center py-10">
+          <p className="text-warmgray-400 text-sm">Sélectionnez un jour pour voir les commandes</p>
+        </div>
+      ) : kanbanOrders.length === 0 ? (
         <div className="card text-center py-10">
           <p className="text-warmgray-400 text-sm">Aucune commande ce jour</p>
         </div>
