@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  ChefHat, Layers, CalendarDays, Heart, Square, Clock, MapPin,
+  ChefHat, Layers, CalendarDays, Heart, Circle, Clock, MapPin,
   ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import useStore from '../store'
