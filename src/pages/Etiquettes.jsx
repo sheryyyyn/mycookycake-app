@@ -79,7 +79,7 @@ export default function Etiquettes() {
 
   const labelOrders = sortedSelectedDays
     .flatMap((day, dayIdx) => ordersForDay(day).map(o => ({ order: o, colorIndex: dayIdx })))
-  const labelCount = labelOrders.length
+  const labelCount = labelCount
 
   function handlePrint() {
     window.print()
@@ -104,16 +104,16 @@ export default function Etiquettes() {
             <p className="text-sm text-warmgray-400 mt-0.5">
               {selectedDays.length === 0
                 ? 'Sélectionnez un ou plusieurs jours'
-                : `${selectedDays.length} jour${selectedDays.length > 1 ? 's' : ''} sélectionné${selectedDays.length > 1 ? 's' : ''} · ${labelOrders.length} étiquette${labelOrders.length > 1 ? 's' : ''}`}
+                : `${selectedDays.length} jour${selectedDays.length > 1 ? 's' : ''} sélectionné${selectedDays.length > 1 ? 's' : ''} · ${labelCount} étiquette${labelCount > 1 ? 's' : ''}`}
             </p>
           </div>
           <button
             onClick={handlePrint}
-            disabled={labelOrders.length === 0}
+            disabled={labelCount === 0}
             className="btn-primary disabled:opacity-40"
           >
             <Printer size={16} />
-            Imprimer ({labelOrders.length})
+            Imprimer ({labelCount})
           </button>
         </div>
 
@@ -176,9 +176,9 @@ export default function Etiquettes() {
         {selectedDays.length > 0 && (
           <div>
             <p className="text-xs font-semibold text-warmgray-400 uppercase tracking-widest mb-3">
-              Aperçu · {labelOrders.length} étiquette{labelOrders.length > 1 ? 's' : ''}
+              Aperçu · {labelCount} étiquette{labelCount > 1 ? 's' : ''}
             </p>
-            {labelOrders.length === 0 ? (
+            {labelCount === 0 ? (
               <div className="card text-center py-10">
                 <p className="text-warmgray-400 text-sm">Aucune commande ces jours</p>
               </div>
