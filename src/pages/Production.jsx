@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { ChefHat, Layers, CalendarDays, Heart, Square, Clock, MapPin } from 'lucide-react'
+import { ChefHat, Layers, CalendarDays, Heart, Square, Clock, MapPin, ChevronLeft, ChevronRight } from 'lucide-react'
 import useStore from '../store'
-import { format, parseISO, startOfDay, addDays } from 'date-fns'
+import { format, parseISO, startOfDay, addDays, startOfWeek, addWeeks, isSameDay, isSameWeek } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { aggregateGenoises, getWeekOrders, formatDate } from '../utils'
 
