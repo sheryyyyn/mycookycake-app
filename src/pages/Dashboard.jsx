@@ -202,8 +202,8 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Middle Section: Table + Donut + Calendar */}
-      <div className="grid lg:grid-cols-[1fr_180px_220px] gap-4">
+      {/* Middle Section: Table + Calendar */}
+      <div className="grid lg:grid-cols-[1fr_300px] gap-4">
         {/* Orders Overview Table */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
@@ -249,15 +249,9 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Order Progress Donut */}
+        {/* Calendar */}
         <div className="card">
-          <h2 className="font-semibold text-chocolat mb-4 text-sm">Progression</h2>
-          <DonutChart segments={donutSegments} />
-        </div>
-
-        {/* Mini Calendar */}
-        <div className="card">
-          <h2 className="font-semibold text-chocolat mb-3 text-sm">Calendrier</h2>
+          <h2 className="font-semibold text-chocolat mb-4 text-sm">Calendrier</h2>
           <MiniCalendar orders={orders} />
         </div>
       </div>
