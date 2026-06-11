@@ -75,9 +75,10 @@ export default function Etiquettes() {
     })
   }
 
-  const labelOrders = selectedDays
-    .sort((a, b) => a - b)
-    .flatMap(day => ordersForDay(day))
+  const sortedSelectedDays = [...selectedDays].sort((a, b) => a - b)
+
+  const labelOrders = sortedSelectedDays
+    .flatMap((day, dayIdx) => ordersForDay(day).map(o => ({ order: o, colorIndex: dayIdx })))
 
   function handlePrint() {
     window.print()
