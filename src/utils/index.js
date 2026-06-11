@@ -201,9 +201,10 @@ export function aggregateGenoises(orders) {
     parts.push(shapeLabel)
     const label = parts.join(' · ')
 
+    const qty = o.productType === 'layer_cup' ? (Number(o.quantity) || 1) : 1
     const key = `${o.productType}|${sizeLabel}|${shapeRaw}`
     if (!map[key]) map[key] = { label, slicesEach, count: 0 }
-    map[key].count += 1
+    map[key].count += qty
   }
 
   const rows = Object.values(map)
