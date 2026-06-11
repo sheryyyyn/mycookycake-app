@@ -275,6 +275,50 @@ function GenoisesView() {
   )
 }
 
+function FourrageView() {
+  const orders = useStore(s => s.orders)
+  const weekOrders = getWeekOrders(orders)
+  const activeOrders = weekOrders.filter(o => o.status !== 'annulee')
+
+  const counts = {}
+  for (const o of activeOrders) {
+    const flavors = [o.flavorMain, o.flavorSecondary].filter(Boolean)
+    for (const f of flavors) {
+      counts[f] = (counts[f] || 0) + 1
+    }
+  }
+
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1])
+  const total = Object.values(counts).reduce((s, n) => s + n, 0)
+
+  return (
+    <div className="max-w-2xl">
+      <h2 className="font-semibold text-chocolat mb-4">Fourrages à préparer — semaine en cours</h2>
+      {sorted.length === 0 ? (
+        <div className="card text-center py-10">
+          <p className="text-warmgray-400 text-sm">Aucun fourrage à préparer cette semaine</p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+            {sorted.map(([flavor, count]) => (
+              <div key={flavor} className="card flex flex-col items-center gap-2 py-5">
+                <span className="text-3xl font-bold text-bordeaux">{count}</span>
+                <span className="text-sm font-semibold text-chocolat text-center leading-tight">{flavor}</span>
+                <span className="text-xs text-warmgray-400">{count === 1 ? 'gâteau' : 'gâteaux'}</span>
+              </div>
+            ))}
+          </div>
+          <div className="card flex items-center justify-between">
+            <span className="font-bold text-chocolat">Total fourrages</span>
+            <span className="text-2xl font-bold text-bordeaux">{total}</span>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 function PlanningView() {
   const orders = useStore(s => s.orders)
   const now = startOfDay(new Date())
