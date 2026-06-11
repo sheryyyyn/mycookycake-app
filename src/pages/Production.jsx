@@ -236,15 +236,7 @@ function KanbanView() {
 function GenoisesView() {
   const orders = useStore(s => s.orders)
   const weekOrders = getWeekOrders(orders)
-  const genoises = aggregateGenoises(weekOrders)
-
-  const rows = [
-    { label: 'Bento Cakes (2 tranches / gâteau)', value: genoises.bento },
-    { label: 'Layer Cake 10 parts (3 tranches)', value: genoises.layer10 },
-    { label: 'Layer Cake 15 parts (4 tranches)', value: genoises.layer15 },
-    { label: 'Layer Cake 20/25 parts (5 tranches)', value: genoises.layer2025 },
-    { label: 'Layer Cake 30/35 parts (5 tranches)', value: genoises.layer3035 },
-  ].filter(r => r.value > 0)
+  const { rows, total } = aggregateGenoises(weekOrders)
 
   return (
     <div className="max-w-lg">
@@ -254,17 +246,20 @@ function GenoisesView() {
           <p className="text-sm text-warmgray-400 text-center py-6">Aucune génoise à préparer cette semaine</p>
         ) : (
           <>
-            <div className="space-y-2">
+            <div className="space-y-0">
               {rows.map(r => (
                 <div key={r.label} className="flex items-center justify-between py-2.5 border-b border-rose-50 last:border-0">
-                  <span className="text-sm text-chocolat-light">{r.label}</span>
-                  <span className="font-bold text-chocolat">{r.value} tranches</span>
+                  <div>
+                    <span className="text-sm text-chocolat-light">{r.label}</span>
+                    <span className="text-xs text-warmgray-400 ml-2">({r.slicesEach} tranches × {r.count})</span>
+                  </div>
+                  <span className="font-bold text-chocolat">{r.total} tranches</span>
                 </div>
               ))}
             </div>
             <div className="mt-4 pt-3 border-t border-rose-200 flex items-center justify-between">
               <span className="font-bold text-chocolat">Total à préparer</span>
-              <span className="text-2xl font-bold text-bordeaux">{genoises.total} tranches</span>
+              <span className="text-2xl font-bold text-bordeaux">{total} tranches</span>
             </div>
           </>
         )}
