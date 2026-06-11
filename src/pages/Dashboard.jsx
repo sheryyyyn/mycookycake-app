@@ -106,13 +106,13 @@ function MiniCalendar({ orders }) {
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-0.5 mb-1">
+      <div className="grid grid-cols-7 gap-1 mb-1">
         {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
-          <div key={i} className="text-center text-[10px] font-semibold text-warmgray-400 py-0.5">{d}</div>
+          <div key={i} className="text-center text-xs font-semibold text-warmgray-400 py-1">{d}</div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-0.5">
+      <div className="grid grid-cols-7 gap-1">
         {Array(startPad).fill(null).map((_, i) => <div key={`pad-${i}`} />)}
         {days.map(day => {
           const key = format(day, 'yyyy-MM-dd')
@@ -122,7 +122,7 @@ function MiniCalendar({ orders }) {
             <div
               key={key}
               className={`
-                text-center text-[11px] py-1 rounded-md font-medium transition-colors
+                text-center text-sm py-2 rounded-lg font-medium transition-colors
                 ${today ? 'bg-bordeaux text-white' : ''}
                 ${hasPickup && !today ? 'bg-rose-100 text-bordeaux font-bold' : ''}
                 ${!today && !hasPickup ? 'text-warmgray-500' : ''}
