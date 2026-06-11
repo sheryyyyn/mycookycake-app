@@ -79,7 +79,7 @@ export default function Etiquettes() {
 
   const labelOrders = sortedSelectedDays
     .flatMap((day, dayIdx) => ordersForDay(day).map(o => ({ order: o, colorIndex: dayIdx })))
-  const labelCount = labelCount
+  const labelCount = labelOrders.length
 
   function handlePrint() {
     window.print()
