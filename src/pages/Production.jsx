@@ -281,11 +281,13 @@ function getOrderDetailLabel(o) {
   return `${type}${variant}`
 }
 
-// extract numeric parts value for sorting bento sizes (2 parts → 2, 6 parts → 6, layer cup → 9999)
+// sort by cake size ascending; Layer Cup always last regardless of size
 function detailSortKey(label) {
   if (/layer cup/i.test(label)) return 9999
-  const m = label.match(/(\d+)/)
-  return m ? parseInt(m[1]) : 0
+  const m = label.match(/(\d+)\s*parts?/i)
+  if (m) return parseInt(m[1])
+  const n = label.match(/(\d+)/)
+  return n ? parseInt(n[1]) : 0
 }
 
 function FourrageView() {
