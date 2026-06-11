@@ -59,34 +59,25 @@ function FlavorSelect({ form, onChange, activeFlavors, k, label }) {
 }
 
 function DateButton({ value, onChange }) {
-  const inputRef = useRef(null)
   const formatted = value
     ? format(parseISO(value), 'EEE d MMMM', { locale: fr })
     : null
 
-  function open() {
-    try { inputRef.current?.showPicker() } catch { inputRef.current?.click() }
-  }
-
   return (
     <div className="relative">
-      <button
-        type="button"
-        onClick={open}
-        className="form-input text-left flex items-center gap-2 w-full"
-      >
+      {/* Affichage stylisé */}
+      <div className="form-input flex items-center gap-2 pointer-events-none">
         <CalendarDays size={15} className="text-bordeaux flex-shrink-0" />
         <span className={value ? 'text-chocolat capitalize font-medium' : 'text-warmgray-400'}>
           {formatted ?? 'Choisir une date'}
         </span>
-      </button>
+      </div>
+      {/* Input natif invisible par-dessus, reçoit les clics */}
       <input
-        ref={inputRef}
         type="date"
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-        tabIndex={-1}
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
       />
     </div>
   )
