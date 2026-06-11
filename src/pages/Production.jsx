@@ -7,7 +7,7 @@ import {
 import useStore from '../store'
 import { format, parseISO, startOfDay, addDays, startOfWeek, addWeeks, isSameDay } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { aggregateGenoises, getWeekOrders, formatDate } from '../utils'
+import { aggregateGenoises, getWeekOrders, formatDate, getProductLabel } from '../utils'
 
 const KANBAN_COLUMNS = [
   { id: 'pas_commence', label: 'Pas commencé', color: 'bg-gray-50 border-gray-200',       dot: 'bg-gray-400' },
