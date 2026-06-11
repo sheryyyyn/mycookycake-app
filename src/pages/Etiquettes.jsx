@@ -4,23 +4,23 @@ import useStore from '../store'
 import { parseISO, format, startOfWeek, addDays, isSameDay, addWeeks, subWeeks } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
-const DAY_BG = {
-  1: 'bg-white',
-  2: 'bg-white',
-  3: 'bg-white',
-  4: 'bg-white',
-  5: 'bg-rose-50',
-  6: 'bg-blue-50',
-  0: 'bg-green-50',
-}
+// Couleurs par index de jour sélectionné — inline styles pour garantir le rendu print
+const DAY_COLORS = [
+  { bg: '#fff',     border: '#d1d5db' },
+  { bg: '#fef2f2',  border: '#fca5a5' }, // rose
+  { bg: '#eff6ff',  border: '#93c5fd' }, // bleu
+  { bg: '#f0fdf4',  border: '#86efac' }, // vert
+  { bg: '#fefce8',  border: '#fde047' }, // jaune
+  { bg: '#faf5ff',  border: '#d8b4fe' }, // violet
+  { bg: '#fff7ed',  border: '#fdba74' }, // orange
+]
 
-function EtiquetteLabel({ order }) {
-  const dayOfWeek = order.deliveryDate ? parseISO(order.deliveryDate).getDay() : -1
-  const bg = DAY_BG[dayOfWeek] || 'bg-white'
+function EtiquetteLabel({ order, colorIndex = 0 }) {
+  const { bg, border } = DAY_COLORS[colorIndex % DAY_COLORS.length]
   const isLayerCup = order.productType === 'layer_cup'
 
   return (
-    <div className={`${bg} border border-gray-300 rounded-lg p-2.5 flex flex-col gap-1.5 text-[11px] leading-snug break-inside-avoid`}>
+    <div style={{ backgroundColor: bg, borderColor: border }} className="border rounded-lg p-2.5 flex flex-col gap-1.5 text-[11px] leading-snug break-inside-avoid">
       <div className="flex gap-2 items-start">
         {order.photos?.[0] && (
           <img src={order.photos[0]} alt="" className="w-12 h-12 object-cover rounded flex-shrink-0" />
