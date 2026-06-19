@@ -356,3 +356,79 @@ function CalendarView({ orders, updateOrder }) {
     </div>
   )
 }
+
+function ListView({ orders, updateOrder }) {
+  const navigate = useNavigate()
+
+  if (orders.length === 0) {
+    return <EmptyState message="Aucune commande trouvée" />
+  }
+
+  // Grouper par mois
+  const byMonth = {}
+  orders.forEach(o => {
+    const key = o.deliveryDate ? o.deliveryDate.slice(0, 7) : 'sans-date'
+    if (!byMonth[key]) byMonth[key] = []
+    byMonth[key].push(o)
+  })
+
+  const sortedMonths = Object.keys(byMonth).sort((a, b) => b.localeCompare(a))
+
+  return (
+    <div className="space-y-6">
+      {sortedMonths.map(monthKey => {
+        const label = monthKey === 'sans-date'
+          ? 'Sans date'
+          : format(new Date(monthKey + '-01'), 'MMMM yyyy', { locale: fr })
+        const monthOrders = byMonth[monthKey].sort((a, b) =>
+          (b.deliveryDate || '').localeCompare(a.deliveryDate || '')
+        )
+        return (
+          <div key={monthKey}>
+            <h3 className="font-playfair font-semibold text-chocolat capitalize mb-3 text-lg">
+              {label}
+              <span className="ml-2 text-sm font-sans font-normal text-warmgray-400">
+                {monthOrders.length} commande{monthOrders.length !== 1 ? 's' : ''}
+              </span>
+            </h3>
+            <div className="space-y-2">
+              {monthOrders.map(o => (
+                <button
+                  key={o.id}
+                  onClick={() => navigate(`/commandes/${o.id}`)}
+                  className="w-full text-left card hover:border-rose-300 hover:shadow-soft transition-all p-3"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      {o.deliveryDate && (
+                        <span className="text-xs font-bold text-bordeaux bg-rose-50 border border-rose-200 rounded-lg px-2 py-1 shrink-0">
+                          {format(new Date(o.deliveryDate + 'T12:00:00'), 'd MMM', { locale: fr })}
+                          {o.deliveryTime && <span className="ml-1 font-normal">{o.deliveryTime}</span>}
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm text-chocolat truncate">
+                          {o.clientInstagram || `${o.clientFirstName || ''} ${o.clientLastName || ''}`.trim()}
+                        </p>
+                        <p className="text-xs text-warmgray-400 truncate">
+                          {getProductLabel(o.productType)}{o.productVariant ? ` · ${o.productVariant}` : ''}
+                          {o.flavorMain ? ` · ${o.flavorMain}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <StatusBadge status={o.status} />
+                      {o.amountTotal > 0 && (
+                        <span className="text-xs font-bold text-chocolat">{formatAmount(o.amountTotal)}</span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
