@@ -72,14 +72,6 @@ export default function Sidebar({ onClose }) {
           <span>Lien formulaire cliente</span>
         </button>
 
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-warmgray-400 text-sm hover:text-bordeaux hover:bg-rose-50 transition-colors"
-        >
-          <LogOut size={15} />
-          <span>Déconnexion</span>
-        </button>
-
         <p className="px-3 text-xs text-warmgray-400 italic leading-tight">
           L'art de créer des moments sucrés
         </p>
