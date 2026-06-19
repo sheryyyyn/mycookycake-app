@@ -141,11 +141,12 @@ export default function Orders() {
         </div>
       </div>
 
-      {(search || filterStatus || filterMode) && (
-        <p className="text-xs text-warmgray-400 mb-3">{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</p>
-      )}
+      <p className="text-xs text-warmgray-400 mb-3">{filtered.length} commande{filtered.length !== 1 ? 's' : ''} affichée{filtered.length !== 1 ? 's' : ''}</p>
 
-      <CalendarView orders={filtered} updateOrder={updateOrder} />
+      {period === 'avenir'
+        ? <CalendarView orders={filtered} updateOrder={updateOrder} />
+        : <ListView orders={filtered} updateOrder={updateOrder} />
+      }
     </div>
   )
 }
