@@ -139,41 +139,6 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Security */}
-        <div className="card">
-          <h2 className="font-playfair font-semibold text-chocolat text-lg mb-4">Sécurité</h2>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <label className="form-label">Nouveau mot de passe</label>
-              <input
-                className="form-input"
-                type="password"
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                placeholder="Laisser vide pour ne pas modifier"
-                autoComplete="new-password"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="form-label">Confirmer le nouveau mot de passe</label>
-              <input
-                className="form-input"
-                type="password"
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                placeholder="Confirmer..."
-                autoComplete="new-password"
-              />
-            </div>
-            {pwdError && (
-              <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-sm text-red-600">
-                <AlertCircle size={14} />
-                {pwdError}
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Save button */}
         <div className="flex items-center gap-3">
           <button onClick={handleSave} className="btn-primary gap-2">
