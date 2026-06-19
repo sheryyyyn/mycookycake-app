@@ -6,13 +6,9 @@ import { parseCSV, convertNotionOrders } from '../utils/notionImport'
 export default function Settings() {
   const settings = useStore(s => s.settings)
   const updateSettings = useStore(s => s.updateSettings)
-  const logout = useStore(s => s.logout)
   const bulkImport = useStore(s => s.bulkImport)
 
   const [form, setForm] = useState({ ...settings })
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [pwdError, setPwdError] = useState('')
   const [saved, setSaved] = useState(false)
   const [copied, setCopied] = useState(false)
 
