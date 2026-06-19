@@ -45,7 +45,7 @@ export default function Orders() {
   return (
     <div className="p-3 sm:p-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 gap-4">
+      <div className="flex items-center justify-between mb-4 gap-4">
         <div>
           <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-chocolat">Commandes</h1>
           <p className="text-sm text-warmgray-400 mt-0.5">{orders.length} commande{orders.length !== 1 ? 's' : ''} au total</p>
@@ -55,6 +55,27 @@ export default function Orders() {
           <span className="hidden sm:inline">Nouvelle commande</span>
           <span className="sm:hidden">Nouvelle</span>
         </Link>
+      </div>
+
+      {/* Toggle période */}
+      <div className="flex gap-1 mb-4 bg-rose-50 border border-rose-100 rounded-xl p-1 w-fit">
+        {[
+          { value: 'avenir', label: 'À venir' },
+          { value: 'historique', label: 'Historique' },
+          { value: 'toutes', label: 'Toutes' },
+        ].map(({ value, label }) => (
+          <button
+            key={value}
+            onClick={() => setPeriod(value)}
+            className={`text-sm px-4 py-1.5 rounded-lg font-medium transition-colors ${
+              period === value
+                ? 'bg-white text-bordeaux shadow-sm border border-rose-100'
+                : 'text-warmgray-400 hover:text-bordeaux'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Filters */}
