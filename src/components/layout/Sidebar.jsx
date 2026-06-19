@@ -1,7 +1,7 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, ShoppingBag, ChefHat, ShoppingCart,
-  Tag, Users, BookOpen, BarChart2, Settings, Link2, LogOut, Cake,
+  Tag, Users, BookOpen, BarChart2, Settings, Link2, Cake,
 } from 'lucide-react'
 import useStore from '../../store'
 
