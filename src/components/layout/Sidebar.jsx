@@ -18,15 +18,7 @@ const NAV_ITEMS = [
 ]
 
 export default function Sidebar({ onClose }) {
-  const logout = useStore(s => s.logout)
   const settings = useStore(s => s.settings)
-  const navigate = useNavigate()
-
-  function handleLogout() {
-    logout()
-    navigate('/login')
-    onClose?.()
-  }
 
   function copyFormLink() {
     const url = window.location.origin + '/formulaire'
