@@ -23,29 +23,12 @@ export default function Settings() {
   function setField(key, val) { setForm(f => ({ ...f, [key]: val })) }
 
   function handleSave() {
-    const updates = {
+    updateSettings({
       businessName: form.businessName,
       formIntro: form.formIntro,
       pickupInfo: form.pickupInfo,
       conditions: form.conditions,
-    }
-
-    if (newPassword || confirmPassword) {
-      if (newPassword !== confirmPassword) {
-        setPwdError('Les mots de passe ne correspondent pas.')
-        return
-      }
-      if (newPassword.length < 4) {
-        setPwdError('Mot de passe trop court (4 caractères minimum).')
-        return
-      }
-      updates.adminPassword = newPassword
-      setPwdError('')
-      setNewPassword('')
-      setConfirmPassword('')
-    }
-
-    updateSettings(updates)
+    })
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
