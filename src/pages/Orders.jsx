@@ -18,13 +18,17 @@ export default function Orders() {
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterMode, setFilterMode] = useState('')
+  const [period, setPeriod] = useState('avenir')
 
   const today = format(new Date(), 'yyyy-MM-dd')
 
   const filtered = useMemo(() => {
     let list = [...orders]
-    // Uniquement les commandes à partir d'aujourd'hui
-    list = list.filter(o => !o.deliveryDate || o.deliveryDate.slice(0, 10) >= today)
+    if (period === 'avenir') {
+      list = list.filter(o => !o.deliveryDate || o.deliveryDate.slice(0, 10) >= today)
+    } else if (period === 'historique') {
+      list = list.filter(o => o.deliveryDate && o.deliveryDate.slice(0, 10) < today)
+    }
     if (filterStatus) list = list.filter(o => o.status === filterStatus)
     if (filterMode) list = list.filter(o => o.deliveryMode === filterMode)
     if (search.trim()) {
@@ -36,7 +40,7 @@ export default function Orders() {
       )
     }
     return list.sort((a, b) => (a.deliveryDate || '').localeCompare(b.deliveryDate || ''))
-  }, [orders, search, filterStatus, filterMode])
+  }, [orders, search, filterStatus, filterMode, period])
 
   return (
     <div className="p-3 sm:p-6 max-w-6xl mx-auto">

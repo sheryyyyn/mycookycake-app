@@ -304,7 +304,6 @@ function FourrageView() {
   }
 
   const sorted = Object.entries(byFlavor).sort((a, b) => b[1].length - a[1].length)
-  const total = sorted.reduce((s, [, arr]) => s + arr.length, 0)
 
   return (
     <div className="max-w-full">
@@ -328,16 +327,16 @@ function FourrageView() {
               return (
                 <div key={flavor} className="bg-white rounded-xl border border-rose-100 shadow-card overflow-hidden">
                   {/* header */}
-                  <div className="bg-rose-50 px-3 py-2 flex items-center justify-between gap-2 border-b border-rose-100">
-                    <span className="text-[11px] font-bold text-chocolat uppercase tracking-wide leading-tight">{flavor}</span>
-                    <span className="text-2xl font-bold text-bordeaux leading-none flex-shrink-0">{flavorOrders.length}</span>
+                  <div className="bg-rose-50 px-4 py-3 flex items-center justify-between gap-2 border-b border-rose-100">
+                    <span className="text-base font-bold text-chocolat uppercase tracking-wide leading-tight">{flavor}</span>
+                    <span className="text-3xl font-bold text-bordeaux leading-none flex-shrink-0">{flavorOrders.length}</span>
                   </div>
                   {/* détails */}
-                  <div className="px-3 py-2 divide-y divide-rose-50">
+                  <div className="px-4 py-3 divide-y divide-rose-50">
                     {detailEntries.map(([label, count]) => (
-                      <div key={label} className="flex items-center justify-between gap-2 py-1 first:pt-0 last:pb-0">
-                        <span className="text-xs text-chocolat-light leading-tight">{label}</span>
-                        <span className="text-xs font-bold text-bordeaux flex-shrink-0 ml-1">
+                      <div key={label} className="flex items-center justify-between gap-2 py-1.5 first:pt-0 last:pb-0">
+                        <span className="text-sm text-chocolat-light leading-tight">{label}</span>
+                        <span className="text-sm font-bold text-bordeaux flex-shrink-0 ml-1">
                           {count > 1 ? `× ${count}` : '× 1'}
                         </span>
                       </div>
@@ -347,10 +346,7 @@ function FourrageView() {
               )
             })}
           </div>
-          <div className="inline-flex items-center gap-4 bg-white rounded-xl border border-rose-100 shadow-card px-4 py-2">
-            <span className="font-bold text-chocolat text-sm">Total fourrages</span>
-            <span className="text-xl font-bold text-bordeaux">{total}</span>
-          </div>
+
         </>
       )}
     </div>
