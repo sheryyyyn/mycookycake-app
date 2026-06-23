@@ -186,7 +186,7 @@ export default function NewOrder() {
     return Object.keys(errs).length === 0
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!validate()) return
 
@@ -194,7 +194,7 @@ export default function NewOrder() {
       c.instagram?.toLowerCase() === form.clientInstagram.toLowerCase()
     )
     if (!existing) {
-      addClient({
+      await addClient({
         id: genId(),
         instagram: form.clientInstagram,
         email: form.clientEmail,
@@ -211,7 +211,7 @@ export default function NewOrder() {
     const amountTotal = Number(form.amountTotal) || 0
     const amountPaid = Number(form.amountPaid) || 0
 
-    addOrder({
+    await addOrder({
       ...form,
       supplements: allSupplements,
       id: genId(),
