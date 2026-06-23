@@ -36,6 +36,23 @@ export default function Settings() {
     setTimeout(() => setSaved(false), 2000)
   }
 
+  function downloadBackup() {
+    const data = {
+      exportedAt: new Date().toISOString(),
+      orders,
+      clients,
+      catalog,
+      settings,
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `mycookycake-backup-${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   function copyLink() {
     navigator.clipboard.writeText(formUrl)
     setCopied(true)
