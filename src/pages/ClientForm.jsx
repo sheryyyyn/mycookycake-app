@@ -97,12 +97,12 @@ export default function ClientForm() {
     setStep(8)
   }
 
-  function submit() {
+  async function submit() {
     const existing = clients.find(c =>
       c.instagram?.toLowerCase() === form.clientInstagram.toLowerCase()
     )
     if (!existing) {
-      addClient({
+      await addClient({
         id: genId(),
         firstName: form.clientFirstName,
         lastName: form.clientLastName,
@@ -113,7 +113,7 @@ export default function ClientForm() {
         createdAt: new Date().toISOString(),
       })
     }
-    addOrder({
+    await addOrder({
       ...form,
       id: genId(),
       createdAt: new Date().toISOString(),
