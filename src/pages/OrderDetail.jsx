@@ -44,8 +44,8 @@ export default function OrderDetail() {
     }
   }
 
-  function saveEdit() {
-    updateOrder(id, { ...form, paymentStatus: computePaymentStatus(form.amountTotal, form.amountPaid) })
+  async function saveEdit() {
+    await updateOrder(id, { ...form, paymentStatus: computePaymentStatus(form.amountTotal, form.amountPaid) })
     setEditing(false)
   }
 
