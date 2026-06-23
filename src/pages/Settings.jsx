@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Save, Copy, Check, ExternalLink, AlertCircle, Upload, FileText, CheckCircle2 } from 'lucide-react'
+import { Save, Copy, Check, ExternalLink, AlertCircle, Upload, FileText, CheckCircle2, Download } from 'lucide-react'
 import useStore from '../store'
 import { parseCSV, convertNotionOrders } from '../utils/notionImport'
 
@@ -7,6 +7,9 @@ export default function Settings() {
   const settings = useStore(s => s.settings)
   const updateSettings = useStore(s => s.updateSettings)
   const bulkImport = useStore(s => s.bulkImport)
+  const orders = useStore(s => s.orders)
+  const clients = useStore(s => s.clients)
+  const catalog = useStore(s => s.catalog)
 
   const [form, setForm] = useState({ ...settings })
   const [saved, setSaved] = useState(false)
