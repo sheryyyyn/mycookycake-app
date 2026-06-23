@@ -25,14 +25,27 @@ const useStore = create((set, get) => ({
 
   // ── Loading ───────────────────────────────────────────────────────────────
   loading: true,
+  connectionError: false,
 
   async loadData() {
-    const [ordersRes, clientsRes, catalogRes, settingsRes] = await Promise.all([
-      supabase.from('orders').select('data').order('created_at', { ascending: false }),
-      supabase.from('clients').select('data'),
-      supabase.from('app_data').select('value').eq('key', 'catalog').maybeSingle(),
-      supabase.from('app_data').select('value').eq('key', 'settings').maybeSingle(),
-    ])
+    set({ connectionError: false })
+    let ordersRes, clientsRes, catalogRes, settingsRes
+    try {
+      ;[ordersRes, clientsRes, catalogRes, settingsRes] = await Promise.all([
+        supabase.from('orders').select('data').order('created_at', { ascending: false }),
+        supabase.from('clients').select('data'),
+        supabase.from('app_data').select('value').eq('key', 'catalog').maybeSingle(),
+        supabase.from('app_data').select('value').eq('key', 'settings').maybeSingle(),
+      ])
+    } catch {
+      set({ loading: false, connectionError: true })
+      return
+    }
+
+    if (ordersRes.error?.message?.includes('ECONNREFUSED') || ordersRes.error?.message?.includes('fetch')) {
+      set({ loading: false, connectionError: true })
+      return
+    }
 
     const remoteOrders = ordersRes.data?.map(r => r.data) ?? []
     const remoteClients = clientsRes.data?.map(r => r.data) ?? []
