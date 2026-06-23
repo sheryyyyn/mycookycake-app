@@ -231,6 +231,19 @@ export default function Settings() {
           )}
         </div>
 
+        {/* Backup */}
+        <div className="card border-green-100">
+          <h2 className="font-playfair font-semibold text-chocolat text-lg mb-1">Sauvegarde des données</h2>
+          <p className="text-xs text-warmgray-400 mb-4">
+            Télécharge une copie complète de toutes tes commandes, clientes, catalogue et paramètres au format JSON.
+            Conserve ce fichier en lieu sûr (Google Drive, iCloud…) — il te permettra de tout restaurer en cas de problème.
+          </p>
+          <button onClick={downloadBackup} className="btn-secondary gap-2">
+            <Download size={14} />
+            Télécharger la sauvegarde ({orders.length} commandes, {clients.length} clientes)
+          </button>
+        </div>
+
         {/* Danger zone */}
         <div className="card border-red-100">
           <h2 className="font-playfair font-semibold text-red-700 text-lg mb-2">Zone dangereuse</h2>
