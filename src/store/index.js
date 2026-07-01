@@ -42,7 +42,7 @@ const useStore = create((set, get) => ({
       return
     }
 
-    if (ordersRes.error?.message?.includes('ECONNREFUSED') || ordersRes.error?.message?.includes('fetch')) {
+    if (ordersRes.error || clientsRes.error || catalogRes.error || settingsRes.error) {
       set({ loading: false, connectionError: true })
       return
     }
